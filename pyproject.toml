@@ -1,0 +1,50 @@
+# Module 1 (rag4ds) - project configuration.
+# Section 8 of docs/plan_module1.md is the authority for every choice here.
+# Exact pins live in requirements.lock (VT-3); this file names direct
+# dependencies without inventing versions.
+
+[project]
+name = "rag4ds"
+version = "0.1.0"
+description = "Expert-validated knowledge framework for Auton-BDA (Module 1: RAG for data science)"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "sentence-transformers",
+    "spacy",
+    "pypdf",
+    "pyyaml",
+    "rich",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[project.scripts]
+rag4ds-gate = "rag4ds.gate.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The empty-suite S0 exit runs this config; tests are the acceptance
+# record (9.2), so no test is ever skipped silently.
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests", "tools"]
+
+[tool.ruff.lint]
+# E722 (bare except) is the fail-loud rule 9.2 names; B (bugbear) catches
+# swallowed exceptions and mutable defaults; the rest are the standard
+# correctness set.
+select = ["E", "F", "W", "B"]

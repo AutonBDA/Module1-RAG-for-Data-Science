@@ -1,0 +1,59 @@
+# The robotics pack's demo flows (plan 5.2; FR9): pack-authored questions
+# with expected outcomes, run by the evaluation hook's demo-flow runner
+# (src/rag4ds/evalhook/demo.py; tools/run_demo.py --pack robotics) and
+# checked mechanically - the status, the entry ids that must be returned,
+# and any that must not. Human-edited YAML (plan section 8).
+#
+# Questions 1 and 2 are the plan's words (5.2); question 3 is a deliberately
+# out-of-domain query. The expected outcomes were bound by the pack's
+# validator (FR9) in a certified list dated 2026-09-28; flow 2's binding was
+# confirmed in a second certified list.
+#
+# Plan 5.2 says what each flow should show: (1) domain entries (failure
+# modes, torque signatures) plus the anomaly-detection task pattern, status
+# OK; (2) the failure-prediction task pattern and linked domain entries; (3)
+# NO_GROUNDING.
+schema: 1
+pack: robotics
+flows:
+  - id: torque-before-failure
+    query: which torque patterns precede actuator failure in rotary joints
+    request: {domain: robotics, top_k: 5}
+    expected:
+      status: OK
+      present:
+        - bearing-outer-race-fault
+        - harmonic-drive-torque
+        - anomaly-detection-multivariate-time-series
+        - failure-prediction-multivariate-time-series
+      absent:
+        - association-rule-analysis
+        - classification-high-dimensional-tabular
+      bound_by: K. Naruse
+      bound_on: '2026-09-28'
+      record: authoring/robotics_s9_demo_naruse_list_2_certified.txt
+  - id: failure-prediction-data
+    query: what data does failure prediction need from a robot arm
+    request: {domain: robotics, top_k: 5}
+    expected:
+      status: OK
+      present:
+        - failure-prediction-multivariate-time-series
+      absent:
+        - association-rule-analysis
+        - classification-high-dimensional-tabular
+      bound_by: K. Naruse
+      bound_on: '2026-09-28'
+      record: >-
+        authoring/robotics_s9_demo_naruse_list_2_certified.txt;
+        authoring/robotics_s9_demo_naruse_list_3_certified.txt
+  - id: out-of-domain
+    query: which patient features predict response to chemotherapy
+    request: {layer: domain, domain: robotics, top_k: 5}
+    expected:
+      status: NO_GROUNDING
+      present: []
+      absent: []
+      bound_by: K. Naruse
+      bound_on: '2026-09-28'
+      record: authoring/robotics_s9_demo_naruse_list_2_certified.txt

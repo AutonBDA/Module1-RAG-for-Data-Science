@@ -107,6 +107,14 @@ class Embedder(Protocol):
     def embed(self, texts: list[str]) -> np.ndarray: ...
 
 
+# The VT-3 pin (docs/vt3_pins.md): the embedding model and the exact Hub
+# revision every index build, clustering and embedding strategy uses. Until
+# S9c the pin lived only in the tests and the record; the tools import it
+# from here and the suite asserts the copies agree.
+PINNED_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+PINNED_EMBEDDING_REVISION = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+
+
 class SentenceTransformerEmbedder:
     """The pinned sentence-transformers model (VT-3: all-MiniLM-L6-v2 at
     its recorded revision). Loaded lazily; embeddings are L2-normalized so

@@ -8,6 +8,7 @@ the run manifest is an NFR2 record; the run is deterministic.
 """
 
 import hashlib
+import re
 
 import pytest
 
@@ -199,11 +200,17 @@ def test_embedding_strategy_proposes_related_and_honours_seeds():
     seeds = ["failure modes of rotary actuators"]
     strat = EmbeddingStrategy(FAKE_Embedder(), seeds, top_k=2, floor=0.0)
     result = run_extraction(doc(), [strat], COMMIT, TS, embedder=FAKE_Embedder())
-    assert result.candidates and all(
-        c["proposed"]["content"].startswith("related concept:") for c in result.candidates)
+    # AR-rag4ds-049 F5: the strategy's own label for its capability
+    # ("related concept: ") is not content and never reaches an entry - what
+    # it proposes is the source's own words, from the span it names
+    assert result.candidates and not any(
+        "related concept:" in c["proposed"]["content"] for c in result.candidates)
     for c in result.candidates:
         validate_candidate(c)
         assert within_quotation_bound(c["proposed"]["content"], SYNTH)
+        words = c["proposed"]["content"].split()
+        span = SYNTH[c["span_start"]:c["span_end"]]
+        assert re.findall(r"[\w-]+", span)[:len(words)] == words, c["proposed"]["content"]
     strat_names = [d["name"] for d in result.manifest["strategies"]]
     assert strat_names == ["embed-v1"]
     assert result.manifest["strategies"][0]["model"] == {"id": "FAKE-embed",

@@ -19,8 +19,12 @@ SECRET_PATTERNS = [
     re.compile(rb"ghp_[A-Za-z0-9]{36}"),  # GitHub PAT
     re.compile(rb"github_pat_[A-Za-z0-9_]{22,}"),
     re.compile(rb"hf_[A-Za-z0-9]{34}"),  # Hugging Face token
-    re.compile(rb"sk-[A-Za-z0-9]{20,}T3BlbkFJ[A-Za-z0-9]{20,}"),  # OpenAI key
+    re.compile(rb"sk-[A-Za-z0-9]{20,}T3BlbkFJ[A-Za-z0-9]{20,}"),  # API key with the T3BlbkFJ marker
     re.compile(rb"xox[baprs]-[A-Za-z0-9-]{10,}"),  # Slack token
+    # AR-rag4ds-060 O2: Google API keys - the classic form, and the "AQ." form of
+    # the project's Gemini key (conf.info at the repository root, ignored by git)
+    re.compile(rb"AIza[0-9A-Za-z_-]{35}"),
+    re.compile(rb"AQ\.[0-9A-Za-z_-]{40,}"),
 ]
 
 

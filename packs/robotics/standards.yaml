@@ -1,0 +1,182 @@
+# The robotics pack's external standards (plan 4.5, FR11, VT-1) - DATA read
+# by the generic tools/file_mapping_draft.py (a pack carries no code and the
+# core carries no domain, AR-rag4ds-028 F6). Each standard the pack maps to
+# is pinned here by the sha256 of the PI's own copy, placed in data/standards/
+# (gitignored) on 2026-09-20; a different file at the path is refused. The
+# standards are IEEE copyright and NOT redistributable: the file and its
+# extracted text stay outside git, and this registry carries names and
+# clause numbers only - no sentence of either text is committed anywhere.
+#
+# `classes` is the vocabulary a mapping row may name (4.5: one pack entry ->
+# one external class); a row naming anything else is refused at filing. The
+# list was verified against the text of IEEE Std 1872-2015 on 2026-09-20
+# (VT-1; docs/s9_robotics_pack.md section 15): every class below is declared
+# by a subclass axiom in the clause given, under the sub-ontology prefix of
+# that clause (corax = clause 6, cora = clause 7, rparts = clause 8,
+# pos = clause 9). `relations` lists EVERY relation the same clauses
+# declare - by a subrelation axiom, or by an axiom typing the term as a
+# relation, predicate or function (the two forms the text uses), plus the
+# one part role 8.5 declares with a subclass axiom as printed - so that a
+# row cannot target one by mistake: the 7.2 part role and the 7.4 autonomy
+# roles are relations in the text, not classes. Completed after
+# AR-rag4ds-042 r1 F1 (the first sweep stopped inside 9.6 and recorded
+# 30 of the 42). No term of clauses 6-9 is deliberately left out.
+# `parent` is the SUMO term the axiom names, for orientation only; for a
+# relation it is the relation it is declared a subrelation of.
+# `spelled` records the axiom's own spelling where it differs from the
+# clause heading (the text prints both); `example: true` marks a class the
+# clause declares inside a worked example rather than as a normative term.
+schema: 1
+pack: robotics
+raw_dir: data/standards
+standards:
+  cora-ieee-1872:
+    title: IEEE Std 1872-2015 - IEEE Standard Ontologies for Robotics and Automation
+    publisher: IEEE
+    year: 2015
+    file: 1872-2015.pdf
+    sha256: 3e45b71e09f984e4220da36f1ce7917ffa8a479b8928b85fb387ba7d152fdaa4
+    pages: 60
+    license: >-
+      IEEE copyright, institutional-access copy (IEEE Xplore); NOT
+      redistributable; the PDF and its extracted text stay outside git in
+      data/standards/ (NFR6); only class names, relation names and clause
+      numbers are recorded here.
+    verified: 2026-09-20 (VT-1; docs/s9_robotics_pack.md section 15)
+    sub_ontologies:
+      corax: clause 6 (CORAX)
+      cora: clause 7 (CORA)
+      rparts: clause 8 (RPARTS)
+      pos: clause 9 (POS)
+    classes:
+      - {name: corax:Design, clause: "6.2", parent: Proposition}
+      - {name: corax:DesignObject, clause: "6.2", parent: Abstract}
+      - {name: corax:PhysicalEnvironment, clause: "6.3", parent: Object}
+      - {name: corax:Interaction, clause: "6.4", parent: Process}
+      - {name: corax:ArtificialSystem, clause: "6.5", parent: Artifact}
+      - {name: corax:ProcessingDevice, clause: "6.6", parent: ElectricDevice}
+      - {name: corax:RobotMotion, clause: "6.7", parent: Motion}
+      - {name: corax:HumanRobotCommunication, clause: "6.8", parent: ContentBearingProcess}
+      - {name: corax:RobotRobotCommunication, clause: "6.9", parent: ContentBearingProcess}
+      - {name: cora:Robot, clause: "7.1", parent: Device and Agent}
+      - {name: cora:RobotInterface, clause: "7.3", parent: Device}
+      - {name: cora:RobotGroup, clause: "7.5", parent: Group}
+      - {name: cora:RoboticSystem, clause: "7.6", parent: ArtificialSystem}
+      - {name: cora:RoboticEnvironment, clause: "7.7", parent: PhysicalEnvironment}
+      - {name: cora:SingleRoboticSystem, clause: "7.8", parent: RoboticSystem}
+      - {name: cora:CollectiveRoboticSystem, clause: "7.8", parent: RoboticSystem}
+      - {name: rparts:LaserSensor, clause: "8.2", parent: MeasuringDevice, example: true}
+      - {name: rparts:EndEffector, clause: "8.3", parent: Device, example: true}
+      - {name: rparts:RadioReceiver, clause: "8.4", parent: Device, example: true}
+      - {name: rparts:Controller, clause: "8.5", parent: Device, example: true}
+      - {name: pos:PositionCoordinateSystem, clause: "9.2", parent: Abstract,
+         spelled: PositionCoodinateSystem}
+      - {name: pos:PositionMeasure, clause: "9.3", parent: PhysicalQuantity}
+      - {name: pos:PositionPoint, clause: "9.4", parent: PositionMeasure}
+      - {name: pos:PositionTransformationFunction, clause: "9.5", parent: UnaryFunction}
+      - {name: pos:PositionRegion, clause: "9.6", parent: PositionMeasure}
+      - {name: pos:PositionSpatialOperator, clause: "9.6", parent: Function}
+      - {name: pos:OrientationCoordinateSystem, clause: "9.7", parent: Abstract,
+         spelled: OrientationCoodinateSystem}
+      - {name: pos:OrientationMeasure, clause: "9.8", parent: PhysicalQuantity}
+      - {name: pos:OrientationValue, clause: "9.9", parent: OrientationMeasure}
+      - {name: pos:OrientationTransformationFunction, clause: "9.10", parent: UnaryFunction}
+      - {name: pos:OrientationRegion, clause: "9.11", parent: OrientationMeasure}
+      - {name: pos:OrientationSpatialOperator, clause: "9.11", parent: Function}
+      - {name: pos:PoseMeasure, clause: "9.12", parent: PhysicalQuantity}
+      - {name: pos:QuantitativePose, clause: "9.12", parent: PoseMeasure}
+      - {name: pos:QuantPoseTransformationFunction, clause: "9.13", parent: UnaryFunction}
+    relations:
+      - {name: corax:idealizes, clause: "6.2"}
+      - {name: corax:about, clause: "6.2"}
+      - {name: corax:designAttribute, clause: "6.2"}
+      - {name: corax:designMeasure, clause: "6.2"}
+      - {name: corax:dependsOn, clause: "6.3"}
+      - {name: corax:interactsWith, clause: "6.4"}
+      - {name: cora:robotPart, clause: "7.2", parent: part}
+      - {name: cora:agentRobot, clause: "7.4", parent: agent}
+      - {name: cora:fullyAutonomousRobot, clause: "7.4", parent: agentRobot,
+         spelled: fullyautonomousRobot}
+      - {name: cora:semiAutonomousRobot, clause: "7.4", parent: agentRobot,
+         spelled: semiautonomousRobot}
+      - {name: cora:teleoperatedRobot, clause: "7.4", parent: agentRobot}
+      - {name: cora:remoteControlledRobot, clause: "7.4", parent: agentRobot,
+         spelled: remotecontrolledRobot}
+      - {name: cora:automatedRobot, clause: "7.4", parent: agentRobot}
+      - {name: cora:support, clause: "7.6"}
+      - {name: cora:equippedWith, clause: "7.7"}
+      - {name: rparts:robotSensingPart, clause: "8.2", parent: robotPart}
+      - {name: rparts:robotActuatingPart, clause: "8.3", parent: robotPart}
+      - {name: rparts:robotCommunicatingPart, clause: "8.4", parent: robotPart}
+      # the text declares this one with a subclass axiom where its three
+      # siblings use subrelation; its domains are those of a part role, so
+      # it is listed with them - a row may not target it
+      - {name: rparts:robotProcessingPart, clause: "8.5", parent: robotPart}
+      - {name: pos:refPCS, clause: "9.2"}
+      - {name: pos:positionedAt, clause: "9.3", parent: measure}
+      - {name: pos:inPCS, clause: "9.3"}
+      - {name: pos:relPosition, clause: "9.3"}
+      - {name: pos:mapsPCS, clause: "9.5"}
+      - {name: pos:pCompose, clause: "9.5"}
+      - {name: pos:parentPCS, clause: "9.5"}
+      - {name: pos:inPR, clause: "9.6"}
+      - {name: pos:pGenerated, clause: "9.6"}
+      - {name: pos:extensionPos, clause: "9.6"}
+      - {name: pos:overlapsPosition, clause: "9.6"}
+      - {name: pos:refOCS, clause: "9.7"}
+      - {name: pos:orientedAt, clause: "9.8", parent: measure}
+      - {name: pos:inOCS, clause: "9.8"}
+      - {name: pos:relOrientation, clause: "9.8"}
+      - {name: pos:mapsOCS, clause: "9.10"}
+      - {name: pos:oCompose, clause: "9.10"}
+      - {name: pos:parentOCS, clause: "9.10"}
+      - {name: pos:inOPR, clause: "9.11"}
+      - {name: pos:oRGenerated, clause: "9.11"}
+      - {name: pos:pose, clause: "9.12", parent: measure}
+      - {name: pos:posePosition, clause: "9.12"}
+      - {name: pos:poseOrientation, clause: "9.12"}
+  aur-ieee-1872-2:
+    title: IEEE Std 1872.2-2021 - IEEE Standard for Autonomous Robotics (AuR) Ontology
+    publisher: IEEE
+    year: 2021
+    file: 18722-2021.pdf
+    sha256: fc4dbed097cd0048495d80a020add59240e4a7dd828b04dee5929a374c720035
+    pages: 49
+    license: >-
+      IEEE copyright, institutional-access copy (IEEE Xplore); NOT
+      redistributable; the PDF and its extracted text stay outside git in
+      data/standards/ (NFR6); only concept names and clause numbers are
+      recorded here.
+    verified: >-
+      2026-09-20 (VT-1's extension reference; docs/s9_robotics_pack.md
+      section 15): the hierarchy diagrams of clause 4.4 are figures in the
+      PDF, but each concept's parent is stated in the clause's own prose in
+      both the DUL and the SUMO rendering; `parent` carries both, DUL first.
+      The optional standard (FR11 names IEEE 1872); no row targets it yet.
+    sub_ontologies:
+      aur: clause 4.4 (AuR concepts; 4.2 CORA-related, 4.3 DUL and SUMO upper level)
+    classes:
+      - {name: aur:Interaction, clause: "4.4.1", parent: Quality / Attribute}
+      - {name: aur:ObjectCenteredEnvironment, clause: "4.4.2",
+         parent: Physical object / Corpuscular object,
+         spelled: Object-centered environment}
+      - {name: aur:ObjectCenteredEnvironmentDescription, clause: "4.4.3",
+         parent: Information object / Proposition,
+         spelled: Object-centered environment description}
+      - {name: aur:ObjectCenteredExternalEnvironmentDescription, clause: "4.4.3",
+         parent: Information object / Proposition,
+         spelled: Object-centered external environment description}
+      - {name: aur:ManifestedBehavior, clause: "4.4.4", parent: Interaction,
+         spelled: Manifested behavior}
+      - {name: aur:EngineeringBehavior, clause: "4.4.5",
+         parent: Information object / Proposition, spelled: Engineering behavior}
+      - {name: aur:EmergentBehavior, clause: "4.4.6",
+         parent: Information object / Proposition, spelled: Emergent behavior}
+      - {name: aur:RuleBehavior, clause: "4.4.7",
+         parent: Physical object / Corpuscular object, spelled: Rule behavior}
+      - {name: aur:ArchitecturalBehavior, clause: "4.4.8", parent: Quality / Attribute,
+         spelled: Architectural behavior}
+      - {name: aur:Function, clause: "4.4.9", parent: Role / Case role}
+      - {name: aur:FunctionExecution, clause: "4.4.10", parent: Event / Process,
+         spelled: Function execution}
+    relations: []

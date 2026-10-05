@@ -101,6 +101,11 @@ def test_main_end_to_end_with_real_index_model_and_corpus(tmp_path, monkeypatch,
     for d in ("journal", "stage", "runs", "shared/general", "shared/tasks",
               "packs/robotics/entries", "packs/robotics/mappings"):
         (root / d).mkdir(parents=True)
+    # AR-rag4ds-026 F3: main() loads the module's identity registry and refuses
+    # an approver it does not know
+    (root / "identities.yaml").write_text(
+        f"schema: 1\nidentities:\n  - id: v\n    name: {WHO}\n    aliases: []\n"
+        f"    roles: [validator]\n    packs: [robotics]\n", encoding="utf-8")
     data = tmp_path / "data"
     (data / "robotics").mkdir(parents=True)
     raw = data / "robotics" / "handbook.txt"
@@ -158,6 +163,11 @@ def test_main_end_to_end_with_real_index_model_and_corpus(tmp_path, monkeypatch,
     assert "Bearing wear dominates actuator failure in rotary joints." in text
     assert "related approved entries" in text and "torque-signature" in text
     assert "session summary" in text
+    # AR-rag4ds-034 F9 (AR-033 r1 O1): the live gate's transcript witnesses what was
+    # typed at the prompts, at the call site - main() wraps input with the echo reader
+    assert "reason: the source does not support it" in text
+    assert "entry id [bearing-wear]: bearing-wear" in text or "]: bearing-wear" in text
+    assert text.count("[q]uit: a") == 1 and text.count("[q]uit: r") == 1
     decs = decisions.read_all()
     assert [d["type"] for d in decs] == ["approve", "approve", "reject"]
     assert decs[1]["entry"]["id"] == "bearing-wear"

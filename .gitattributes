@@ -1,0 +1,18 @@
+# Canonical byte artefacts (plan I1, 6.5): the decision journal, the staging
+# and run journals, and the gated trees are compared BYTE for byte by the
+# reconstruction test and refused when not canonical. They are written with
+# LF by the module's own writers and must check out unchanged on every
+# platform - never subject to end-of-line conversion (a fresh autocrlf
+# checkout on Windows turned journal/decisions.jsonl into CRLF and the live
+# reconstruction test refused it; found by the hermetic evidence capture at
+# the S8 pin, 2026-09-12).
+# authoring/ (AR-rag4ds-026 F4): the drafts and the in-git source note are
+# catalogued and manifested BY HASH - the same fresh checkout rewrote the
+# note to CRLF, it no longer hashed to its catalog entry, and the gate
+# refused every candidate anchored to it.
+journal/**    -text
+stage/**      -text
+runs/**       -text
+shared/**     -text
+packs/**      -text
+authoring/**  -text

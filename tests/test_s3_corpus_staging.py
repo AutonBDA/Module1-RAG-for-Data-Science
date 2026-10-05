@@ -150,8 +150,10 @@ def test_catalog_document_fields_are_closed_and_mandatory(tmp_path):
 
 
 def test_catalog_pack_code_is_validated(tmp_path):
-    with pytest.raises(CatalogError, match="pack code"):
-        Catalog("shared", tmp_path)
+    # S8: the reserved pack names the shared corpus (plan 9.1, amended) - it is
+    # a catalog like any other, at shared/corpus/catalog.yaml
+    shared = Catalog("shared", tmp_path / "shared")
+    assert shared.path == tmp_path / "shared" / "corpus" / "catalog.yaml"
     with pytest.raises(CatalogError, match="pack code"):
         Catalog("Robotics", tmp_path)
 

@@ -28,6 +28,7 @@ from rag4ds.gate.cli import (
     make_source_resolver,
     suggest_id,
 )
+from rag4ds.gate.identities import IdentityRegistry
 from rag4ds.kb.fold import compile_tree, fold
 from rag4ds.staging.store import StagingStore
 
@@ -39,7 +40,7 @@ T2 = "2026-08-23 13:12 JST"
 T3 = "2026-08-23 13:13 JST"
 T4 = "2026-08-23 13:14 JST"
 TEXT = "Intro. Bearing wear dominates actuator failure in rotary joints. Outro."
-JP = "前書き：日本語の序文。"
+JP = "\u524d\u66f8\u304d\uff1a\u65e5\u672c\u8a9e\u306e\u5e8f\u6587\u3002"
 
 
 def clock_factory():
@@ -91,6 +92,7 @@ def setup(tmp_path, with_source=True, related=clean_finder, text=TEXT, **ctx_kw)
                         "size_bytes": len(raw), "timestamp": "2026-08-23 13:00 JST",
                         "tool": "t", "code_commit": COMMIT, "config": {}})
     resolver = make_source_resolver(runs_ingest, tmp_path / "data") if with_source else None
+    ctx_kw.setdefault("identities", IdentityRegistry.of(WHO, "Mapping Team"))  # AR-rag4ds-026 F3
     ctx = GateContext(
         decisions=Journal(tmp_path / "journal" / "decisions.jsonl"),
         staging=StagingStore(tmp_path / "stage" / "candidates.jsonl"),
@@ -136,7 +138,7 @@ def test_recorded_session_covers_every_decision_type_and_compiles(tmp_path):
                            T2)
     c4 = st.file_candidate(entry_candidate("Unsupported lubrication claim.", h, 0, 6), T3)
     c5 = st.file_candidate({"kind": "mapping-draft", "pack": "robotics",
-                            "standard": "cora-ieee-1872", "author": WHO,
+                            "standard": "cora-ieee-1872", "author": "Mapping Team",
                             "yaml_draft": "standard: cora-ieee-1872\nrows:\n- entry: bearing-wear\n"
                                           "  class: cora:Failure\n  relation: narrower-than\n"
                                           "  note: n\n"}, T4)
@@ -163,7 +165,14 @@ def test_recorded_session_covers_every_decision_type_and_compiles(tmp_path):
     ap = [d for d in decs if d.get("candidate_id") == c3][0]
     assert ap["review"] == {"conflict_display": "checked-clean", "related_shown": [],
                             "conflicts": [], "source_span": "rendered",
-                            "quotation_bound_confirmed": True}
+                            "quotation_bound_confirmed": True,
+                            # AR-rag4ds-026 F5: the record names the index it was decided against
+                            "display_provenance": {"index_version": "0123456789abcdef",
+                                                   "embedding_model": {"id": "FAKE",
+                                                                       "revision": "t"},
+                                                   "min_relevance": 0.05},
+                            # AR-rag4ds-027 F2: an edit is recorded - who, how much kept
+                            "edit": {"editor": WHO, "kept": 1.0, "own": 0.288, "source_run": 21}}
     rj = [d for d in decs if d.get("candidate_id") == c4][0]
     assert rj["review"]["quotation_bound_confirmed"] is False
     # second session: approve the head c1 -> c2 closes mechanically as reject-duplicate
@@ -238,7 +247,8 @@ def test_f1_f2_spans_are_character_offsets_strict_utf8_and_bounds_checked(tmp_pa
     ctx.staging.file_candidate(entry_candidate("x", h, s, e), T0)
     _, transcript = run_session(ctx, ["q"])
     assert "Bearing wear dominates actuator failure in rotary joints." in transcript
-    assert "�" not in transcript and "日本語" not in transcript.split("source span")[1][:200]
+    assert "\ufffd" not in transcript and (
+        "\u65e5\u672c\u8a9e" not in transcript.split("source span")[1][:200])
     # beyond EOF and overrun both refuse loudly, naming the candidate and the length
     ctx2, h2, text2 = setup(tmp_path / "two")
     ctx2.staging.file_candidate(entry_candidate("x", h2, len(text2) + 5, len(text2) + 9), T0)
@@ -461,15 +471,21 @@ def test_queue_filters_context_validation_and_helpers(tmp_path):
     assert len(s.queue()) == 1
     with pytest.raises(GateError, match="not a pack code"):
         GateSession(ctx, Console(file=buf), scripted([]), pack="Bad Pack")
+    ids = ctx.identities
     with pytest.raises(GateError, match="code_commit"):
-        GateContext(ctx.decisions, ctx.staging, ctx.runs, WHO, "zzz")
+        GateContext(ctx.decisions, ctx.staging, ctx.runs, WHO, "zzz", identities=ids)
     with pytest.raises(GateError, match="approver"):
-        GateContext(ctx.decisions, ctx.staging, ctx.runs, "  ", COMMIT)
+        GateContext(ctx.decisions, ctx.staging, ctx.runs, "  ", COMMIT, identities=ids)
     with pytest.raises(GateError, match="does not name the decision journal"):
         GateContext(ctx.decisions, ctx.staging, ctx.runs, WHO, COMMIT,
-                    journal_ref="elsewhere.jsonl")
+                    journal_ref="elsewhere.jsonl", identities=ids)
     with pytest.raises(GateError, match="display_provenance"):  # O11
-        GateContext(ctx.decisions, ctx.staging, ctx.runs, WHO, COMMIT, related_finder=clean_finder)
+        GateContext(ctx.decisions, ctx.staging, ctx.runs, WHO, COMMIT, related_finder=clean_finder,
+                    identities=ids)
+    with pytest.raises(GateError, match="identity registry is required"):  # AR-rag4ds-026 F3
+        GateContext(ctx.decisions, ctx.staging, ctx.runs, WHO, COMMIT)
+    with pytest.raises(GateError, match="not registered"):
+        GateContext(ctx.decisions, ctx.staging, ctx.runs, "someone else", COMMIT, identities=ids)
     assert suggest_id("Bearing wear dominates actuator failure in rotary joints!") == (
         "bearing-wear-dominates-actuator-failure-in")
 
@@ -481,7 +497,7 @@ def test_related_finder_wires_the_retriever_and_provenance(tmp_path):
 
     class FakeIndex:
         manifest = {"index_version": "abc", "embedding_model": {"id": "m", "revision": "r"},
-                    "min_relevance": 0.1}
+                    "min_relevance": 0.1, "entry_count": 3}
 
     class FakeRetriever:
         index = FakeIndex()
@@ -503,7 +519,7 @@ def test_related_finder_wires_the_retriever_and_provenance(tmp_path):
         make_related_finder(FakeRetriever("ERROR"))("q", "domain", "robotics")
     assert display_provenance_of(FakeRetriever("OK")) == {
         "index_version": "abc", "embedding_model": {"id": "m", "revision": "r"},
-        "min_relevance": 0.1}
+        "min_relevance": 0.1, "entry_count": 3}
 
 
 # --- AR-rag4ds-020 r2: F11, O6, O10 ---

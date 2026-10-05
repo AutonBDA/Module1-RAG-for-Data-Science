@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -70,11 +71,15 @@ def validate_document(doc: dict) -> None:
 
 
 class Catalog:
-    """One pack's corpus catalog: packs/<pack>/corpus/catalog.yaml."""
+    """One pack's corpus catalog: packs/<pack>/corpus/catalog.yaml - or, for
+    the reserved pack "shared", the shared corpus at shared/corpus/catalog.yaml:
+    the authoritative texts the general and task layers restate (plan
+    section 3; S8). Same NFR6 rules: catalog in git, raw documents outside,
+    licence and fetch pointer recorded per document."""
 
     def __init__(self, pack: str, pack_root: Path):
-        if not isinstance(pack, str) or not ENTRY_ID_RE.fullmatch(pack) or pack == SHARED_PACK:
-            raise CatalogError(f"pack {pack!r} must be a pack code (never {SHARED_PACK!r})")
+        if not isinstance(pack, str) or not ENTRY_ID_RE.fullmatch(pack):
+            raise CatalogError(f"pack {pack!r} must be a pack code or {SHARED_PACK!r}")
         self.pack = pack
         self.path = Path(pack_root) / "corpus" / "catalog.yaml"
 
@@ -126,6 +131,40 @@ class Catalog:
                 return d
         raise CatalogError(f"document {content_hash} is not in the {self.pack!r} catalog")
 
+    def update_metadata(self, content_hash: str, metadata: dict) -> None:
+        """Replace one catalogued document's metadata (AR-rag4ds-045 F8: the
+        sources file is the authority for a document's bibliographic and
+        role strings, and the catalogue must follow it through the tool, not
+        by hand). The document itself - hash, licence, pointer, flag - is
+        immutable and untouched; an unknown hash is an error."""
+        data = self.load()
+        for d in data["documents"]:
+            if d["hash"] == content_hash:
+                candidate = dict(d, metadata=dict(metadata))
+                validate_document(candidate)
+                d["metadata"] = dict(metadata)
+                self._save(data)
+                return
+        raise CatalogError(f"document {content_hash} is not in the {self.pack!r} catalog")
+
+
+def git_would_commit(path: Path) -> str | None:
+    """Why git would carry this file into a commit, or None when it cannot:
+    the path is ignored (git check-ignore exit 0) or lies outside any work
+    tree (exit 128). A tracked file is not ignored, so it is refused too.
+    Any other git failure is raised, never read as permission."""
+    path = Path(path).resolve()
+    probe = subprocess.run(["git", "check-ignore", "-q", "--", str(path)], cwd=str(path.parent),
+                           capture_output=True, text=True)
+    if probe.returncode == 0:
+        return None
+    if probe.returncode == 128 and "not a git repository" in probe.stderr:
+        return None
+    if probe.returncode == 1:
+        return "lies inside a git work tree and is not ignored (it would be committed)"
+    raise CatalogError(f"git check-ignore failed for {path} (exit {probe.returncode}): "
+                       f"{probe.stderr.strip()}")
+
 
 def ingest(
     catalog: Catalog,
@@ -161,6 +200,15 @@ def ingest(
         raise CatalogError(
             f"raw document {raw_path} is outside the data directory {data_dir} (NFR6)"
         ) from exc
+    if not redistributable:
+        # AR-rag4ds-026 F2: data_dir is whatever the caller passes, so the check
+        # above cannot by itself keep a restricted document out of git; ask git
+        refused = git_would_commit(raw_path)
+        if refused:
+            raise CatalogError(
+                f"raw document {raw_path} is catalogued as NOT redistributable but {refused} "
+                f"(NFR6: a restricted document lives outside git, in an ignored directory)"
+            )
     if not _timestamp_valid(timestamp):
         raise CatalogError(f"timestamp {timestamp!r} must be 'YYYY-MM-DD HH:MM[:SS] JST'")
     if not isinstance(code_commit, str) or not re.fullmatch(r"[0-9a-f]{7,40}", code_commit):

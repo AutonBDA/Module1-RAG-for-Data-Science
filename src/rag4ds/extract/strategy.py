@@ -63,7 +63,8 @@ import math
 import re
 import unicodedata
 from dataclasses import dataclass, field
-from typing import Callable, Protocol
+from types import MappingProxyType
+from typing import Callable, Mapping, Protocol
 
 import numpy as np
 
@@ -78,7 +79,12 @@ from rag4ds.model.entry import ENTRY_ID_RE, ENTRY_TYPES, LAYERS, SHARED_PACK
 # what "a short attributed phrase" costs in technical prose; the longest run
 # any legitimate proposal reaches on the S7 corpus is 45. Separators between
 # the matched tokens are NOT counted - the measure is the characters of the
-# tokens themselves.
+# tokens themselves. The allowance that buys (AR-rag4ds-023 F2): the admitted
+# verbatim SPAN is 64 matched characters plus the separators - about 71 for
+# ordinarily spaced prose, at most 127 NON-SPACE characters under adversarial
+# punctuation padding before MIN_TOKENISABLE_FRACTION refuses; whitespace is
+# invisible to both the measure and the floor, so the raw span length is
+# unbounded - the bounded quantity is copied content, not layout.
 QUOTATION_MAX_SOURCE_CHARS = 64
 # A short attributed phrase (NFR5), in word tokens of word-separated scripts.
 # Retained beside the source-character ceiling rather than replaced by it, so
@@ -211,7 +217,40 @@ def tokenisable_fraction(text: str) -> float:
     return min(covered / len(chars), 1.0)
 
 
-def _longest_runs(content: str, source_text: str) -> tuple[int, int, int]:
+@dataclass(frozen=True, eq=False)
+class SourceIndex:
+    """The source side of the bound check, built ONCE per document and reused
+    across that document's proposals (S9c part 4; AR-rag4ds-030 r1 O1: the
+    re-tokenisation of the whole source on every proposal was 0.159 s of a
+    0.177 s check on the error-codes text). Holds exactly what _longest_runs
+    computed per call before: the source tokens and the inverted index of
+    token text -> positions. Any function that takes a source accepts either
+    the text or its index; the verdicts are the same by construction, since
+    the index is the same two structures built by the same code."""
+
+    tokens: tuple[Token, ...]
+    positions: Mapping[str, tuple[int, ...]]
+    source_sha256: str  # binds the index to the text it was built from (AR-rag4ds-036 F3)
+
+    @classmethod
+    def build(cls, source_text: str) -> "SourceIndex":
+        toks = tuple(tokenise(source_text))
+        index: dict[str, list[int]] = {}
+        for j, t in enumerate(toks):
+            index.setdefault(t.text, []).append(j)
+        return cls(toks, MappingProxyType({k: tuple(v) for k, v in index.items()}),
+                   hashlib.sha256(source_text.encode("utf-8")).hexdigest())
+
+
+def _source_index(source: "str | SourceIndex") -> SourceIndex:
+    if isinstance(source, SourceIndex):
+        return source
+    if not isinstance(source, str):
+        raise TypeError(f"source must be text or a SourceIndex, not {type(source).__name__}")
+    return SourceIndex.build(source)
+
+
+def _longest_runs(content: str, source: "str | SourceIndex") -> tuple[int, int, int]:
     """(word tokens, unsegmented source characters, TOTAL source characters) of
     the runs of content that appear contiguously in the source, each maximised
     over the same single scan.
@@ -222,21 +261,19 @@ def _longest_runs(content: str, source_text: str) -> tuple[int, int, int]:
     unbroken 5000-character token are both measured in the unit that matters.
     The first two are retained and still enforced, so nothing loosens."""
     c = tokenise(content)
-    s = tokenise(source_text)
+    si = _source_index(source)
+    s, index = si.tokens, si.positions
     if not c or not s:
         return 0, 0, 0
-    index: dict[str, list[int]] = {}
-    for j, t in enumerate(s):
-        index.setdefault(t.text, []).append(j)
     best_words = best_chars = best_source = 0
     n, m = len(c), len(s)
     for i in range(n):
         for j in index.get(c[i].text, ()):
             run = 0
-            words = chars = source = 0
+            words = chars = src_chars = 0
             while i + run < n and j + run < m and c[i + run].text == s[j + run].text:
                 tok = c[i + run]
-                source += tok.source_len          # every token, every script (F1)
+                src_chars += tok.source_len       # every token, every script (F1)
                 if tok.unsegmented:
                     # count the CHARACTERS the cluster consumed, not the token (F13)
                     chars += tok.source_len
@@ -245,11 +282,11 @@ def _longest_runs(content: str, source_text: str) -> tuple[int, int, int]:
                 run += 1
             best_words = max(best_words, words)
             best_chars = max(best_chars, chars)
-            best_source = max(best_source, source)
+            best_source = max(best_source, src_chars)
     return best_words, best_chars, best_source
 
 
-def longest_verbatim_runs(content: str, source_text: str) -> tuple[int, int]:
+def longest_verbatim_runs(content: str, source_text: "str | SourceIndex") -> tuple[int, int]:
     """(longest word-token run, longest unsegmented-character run) of content
     that appears contiguously in the source. Both are measured over the same
     matched runs: a run's length counts in whichever unit its tokens are.
@@ -258,26 +295,29 @@ def longest_verbatim_runs(content: str, source_text: str) -> tuple[int, int]:
     return w, c
 
 
-def longest_verbatim_source_chars(content: str, source_text: str) -> int:
+def longest_verbatim_source_chars(content: str, source_text: "str | SourceIndex") -> int:
     """The longest verbatim run measured in SOURCE CHARACTERS across every
     token whatever its script (AR-rag4ds-023 F1). Separators between the
     matched tokens are not counted."""
     return _longest_runs(content, source_text)[2]
 
 
-def longest_verbatim_run(content: str, source_text: str) -> int:
+def longest_verbatim_run(content: str, source_text: "str | SourceIndex") -> int:
     """The longest verbatim run in token units (words plus unsegmented
     characters), for callers that want one number."""
     w, c = longest_verbatim_runs(content, source_text)
     return max(w, c)
 
 
-def quotation_bound_check(content: str, source_text: str) -> dict:
+def quotation_bound_check(content: str, source_text: "str | SourceIndex") -> dict:
     """Measure the bound. Returns {'ok', 'reason', 'word_run', 'char_run',
     'source_run', 'tokenisable'}; ok is False when the content quotes too much
     by ANY of the three ceilings AND when it cannot be measured - the cases are
     distinguished by reason, and none is silently allowed (AR-rag4ds-022 F1,
-    AR-rag4ds-023 F1)."""
+    AR-rag4ds-023 F1). source_text may be the text or its SourceIndex (S9c
+    part 4): a caller checking many contents against one source builds the
+    index once."""
+    source_text = _source_index(source_text)  # the type guard first (AR-rag4ds-036 r1 O1)
     frac = tokenisable_fraction(content)
     if frac < MIN_TOKENISABLE_FRACTION:
         return {"ok": False, "reason": "unmeasurable: only "
@@ -303,7 +343,7 @@ def quotation_bound_check(content: str, source_text: str) -> dict:
     return {"ok": True, "reason": None, **base}
 
 
-def within_quotation_bound(content: str, source_text: str) -> bool:
+def within_quotation_bound(content: str, source_text: "str | SourceIndex") -> bool:
     return bool(quotation_bound_check(content, source_text)["ok"])
 
 
@@ -371,6 +411,13 @@ class Proposal:
 
 class Strategy(Protocol):
     name: str
+    # what the strategy's own filtering refused in its LAST propose(), as
+    # records of {capability, reason, line_sha256, span_start, span_end} - never
+    # source text (AR-rag4ds-038 F2); the runner carries them in the manifest
+    # under refused_by_tuning when there are any (NFR9; AR-rag4ds-038 O2: the
+    # attribute is part of the contract). A strategy that refuses nothing keeps
+    # it empty; one that lacks the attribute is read as refusing nothing.
+    refused: list[dict]
 
     def propose(self, document: Document) -> list[Proposal]: ...
 
@@ -488,14 +535,37 @@ def run_extraction(document: Document, strategies: list[Strategy], code_commit: 
     kept: list[tuple[str, Proposal]] = []
     suppressed: list[dict] = []
     per_strategy: dict[str, int] = {}
+    # S9c part 4 (AR-rag4ds-030 r1 O1): the source is tokenised and indexed ONCE
+    # per document; every proposal's bound check reuses it - the verdicts are the
+    # same, the cost per proposal drops to the content side
+    source_index = SourceIndex.build(document.text)
+    if source_index.source_sha256 != document.source_hash:
+        # AR-rag4ds-036 F3: an index of another text would turn refusals into passes
+        raise ExtractError(f"source index {source_index.source_sha256[:16]}... does not match "
+                           f"the document {document.source_hash[:16]}...; refusing to check "
+                           f"proposals against a foreign index")
+    refused_by_tuning: dict[str, list[dict]] = {}
     for strat in strategies:
         proposals = strat.propose(document)
+        # S9c part 5: what a strategy's own tuning refused before proposing is
+        # recorded in the manifest (NFR9) - only when there is any, so an untuned
+        # run's manifest core, and its extraction id, are unchanged
+        # the Strategy contract (r1 O2) declares `refused`; a strategy without the
+        # attribute refuses nothing - the module's own strategies both declare it
+        tuned_out = list(getattr(strat, "refused", None) or [])
+        for rec in tuned_out:
+            if "text" in rec or set(rec) - {"capability", "reason", "line_sha256", "span_start",
+                                            "span_end"}:
+                raise ExtractError(f"{strat.name}: a refusal record carries fields outside the "
+                                   f"contract ({sorted(rec)}); no source text reaches the manifest")
+        if tuned_out:
+            refused_by_tuning[strat.name] = tuned_out
         n_kept = 0
         for p in proposals:
             if not (0 <= p.span_start < p.span_end <= len(document.text)):
                 raise ExtractError(f"{strat.name}: proposal span [{p.span_start},{p.span_end}) "
                                    f"outside the document ({len(document.text)} chars)")
-            check = quotation_bound_check(p.content, document.text)
+            check = quotation_bound_check(p.content, source_index)
             if not check["ok"]:
                 suppressed.append({"strategy": strat.name, "type": p.type,
                                    "span_start": p.span_start, "span_end": p.span_end,
@@ -532,6 +602,9 @@ def run_extraction(document: Document, strategies: list[Strategy], code_commit: 
         "config": dict(config or {}),
         "produced_sha256": hashlib.sha256(_canonical_bytes(produced)).hexdigest(),
     }
+    if refused_by_tuning:
+        core["refused_by_tuning"] = {name: {"count": len(items), "items": items}
+                                     for name, items in refused_by_tuning.items()}
     extraction_id = hashlib.sha256(_canonical_bytes(core)).hexdigest()[:16]
     run_ref = f"runs/extraction.jsonl#{extraction_id}"  # knowable before filing (F9)
     candidates = [build_entry_candidate(document, p, name, run_ref) for name, p in kept]
@@ -560,7 +633,8 @@ __all__ = [
     "QUOTATION_MAX_SOURCE_CHARS", "QUOTATION_MAX_WORDS", "QUOTATION_MAX_CJK_CHARS",
     "MIN_TOKENISABLE_FRACTION",
     "NEAR_DUPLICATE_COSINE", "EXTRACTION_SCHEMA_VERSION", "SEGMENTED_SCRIPTS", "ExtractError",
-    "Document", "Proposal", "Strategy", "Token", "ExtractionResult", "is_unsegmented",
+    "Document", "Proposal", "Strategy", "Token", "SourceIndex", "ExtractionResult",
+    "is_unsegmented",
     "script_of",
     "tokenise", "tokenisable_fraction", "longest_verbatim_run", "longest_verbatim_runs",
     "longest_verbatim_source_chars",

@@ -1,0 +1,70 @@
+{
+ "checklist": {
+  "demo": true,
+  "gated": true,
+  "lexicon": true,
+  "licences": true
+ },
+ "code_commit": "3642acd",
+ "demo": {
+  "exit": 0,
+  "index_version": "7d436a23c069bac7",
+  "lines": [
+   "PASS     torque-before-failure: OK; returned bearing-outer-race-fault v1, harmonic-drive-torque v2, harmonic-drive-use v2, failure-prediction-multivariate-time-series v2, anomaly-detection-multivariate-time-series v3",
+   "PASS     failure-prediction-data: OK; returned failure-prediction-multivariate-time-series v2, time-series-forecasting v2, harmonic-drive-use v2, urscript v2, anomaly-detection-multivariate-time-series v3",
+   "PASS     out-of-domain: NO_GROUNDING; returned (none)",
+   "run_demo: 3 of 3 flows pass; pack robotics at 1.0.0+unreleased, index 7d436a23c069bac7"
+  ]
+ },
+ "evaluation_run": "none - the evaluation hook is S10, not yet active (4.3)",
+ "files": [
+  {
+   "path": "packs/robotics/entries/bearing-outer-race-fault.json",
+   "sha256": "d9fbcd8421cff3bb81e9cee6793255929f15096d906b7a91a768d364ae205598"
+  },
+  {
+   "path": "packs/robotics/entries/harmonic-drive-torque.json",
+   "sha256": "f43269cd76a9f47ff28a86edd3a1ffb5df909932caabcb94dc7208c74016757f"
+  },
+  {
+   "path": "packs/robotics/entries/harmonic-drive-use.json",
+   "sha256": "3d323abaa0e6b659c9f1b35aee4a3965297c1b9a6ab48eb3af608733667b6481"
+  },
+  {
+   "path": "packs/robotics/entries/protective-stop.json",
+   "sha256": "c7514c9eabe30ddf5bc8d11c6c59b31c817576166601d6080dbf685fc878ac7d"
+  },
+  {
+   "path": "packs/robotics/entries/reducer.json",
+   "sha256": "37ab9e7b1406faaaf6fce5a5c55b86d8168c3be0164fe2d2507ac8d61a998383"
+  },
+  {
+   "path": "packs/robotics/entries/rv-reducer.json",
+   "sha256": "b2042a048000d4d19093ce5195dae36cf677e93321a97c97d78cc42982b3a7e6"
+  },
+  {
+   "path": "packs/robotics/entries/urscript.json",
+   "sha256": "aca67c4d81f61dd506dd4e48560ccb4b95d9f1cf403f108340e2ae0208bdeedf"
+  },
+  {
+   "path": "packs/robotics/mappings/cora-ieee-1872.json",
+   "sha256": "aac393bfc0cfbe4fe58e761d12808910c6d5f5e70e75aec305b20b98c9ccb6b6"
+  }
+ ],
+ "gated_content_sha256": "faf62fbb2bbfa7b44ed01037515019777852cd3f9686805988b16c0eb6aac796",
+ "journal_records": 377,
+ "journal_sha256": "e30fbcd70a33f663edde1eb86406acf1007a410fc1f68f99cdc04d9cc34a0d55",
+ "kind": "pack-release",
+ "pack": "robotics",
+ "previous_version": "1.0.0",
+ "schema": 1,
+ "tag": "pack-robotics-v1.0.1",
+ "timestamp": "2026-10-05 16:16:17 JST",
+ "tool": "tools/release_pack.py",
+ "validation_snapshot": {
+  "decisions": 8,
+  "path": "packs/robotics/validation/1.0.1/decisions.jsonl",
+  "sha256": "00a849a36edd771873ed4ac36f91cbab6240d4410f3e2d8ede553575dd6c3f96"
+ },
+ "version": "1.0.1"
+}

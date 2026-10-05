@@ -102,6 +102,16 @@ def _check_candidate_id(candidate_id, problems) -> None:
 REVIEW_FIELDS = {
     "conflict_display", "related_shown", "conflicts", "source_span", "quotation_bound_confirmed",
 }
+# AR-rag4ds-026 F5: the provenance of the conflict display (index version, model
+# pin, entry count) recorded ON the decision, so a record names the index it was
+# decided against. Optional because the 34 records of the S8 session predate it
+# and a journal is append-only; a gate-written record after the fix carries it
+# (None when the session had no finder).
+REVIEW_OPTIONAL_FIELDS = {"display_provenance", "edit"}
+# AR-rag4ds-027 F2: an edit-then-approve records who edited and how much of the
+# candidate's text the entry keeps (difflib ratio), beside the mechanical bound
+EDIT_FIELDS = {"editor", "kept", "own", "source_run"}
+DISPLAY_PROVENANCE_FIELDS = {"index_version", "embedding_model"}
 CONFLICT_DISPLAY_STATES = (
     "checked-clean", "checked-with-results", "lookup-failed", "no-finder", "not-applicable",
 )
@@ -115,9 +125,31 @@ def _check_review(review, problems, candidate_id=None) -> None:
             # must carry its review context - nothing below the gate may drop it.
             problems.append("a decision that names its candidate_id must carry a review context")
         return
-    if not isinstance(review, dict) or set(review) != REVIEW_FIELDS:
-        problems.append(f"review must be a mapping with exactly the keys {sorted(REVIEW_FIELDS)}")
+    if (not isinstance(review, dict) or not REVIEW_FIELDS <= set(review)
+            or not set(review) <= REVIEW_FIELDS | REVIEW_OPTIONAL_FIELDS):
+        problems.append(f"review must be a mapping with the keys {sorted(REVIEW_FIELDS)} "
+                        f"(optionally {sorted(REVIEW_OPTIONAL_FIELDS)})")
         return
+    if "display_provenance" in review:
+        p = review["display_provenance"]
+        if p is not None and (
+            not isinstance(p, dict) or not DISPLAY_PROVENANCE_FIELDS <= set(p)
+            or not isinstance(p["index_version"], str) or not p["index_version"]
+            or not isinstance(p["embedding_model"], dict)
+        ):
+            problems.append("review.display_provenance must be None or a mapping carrying at "
+                            "least index_version (non-blank string) and embedding_model (mapping)")
+    if "edit" in review:
+        e = review["edit"]
+        def share(v) -> bool:
+            return not isinstance(v, bool) and isinstance(v, (int, float)) and 0.0 <= v <= 1.0
+
+        if (not isinstance(e, dict) or set(e) != EDIT_FIELDS
+                or not isinstance(e["editor"], str) or not e["editor"].strip()
+                or not share(e["kept"]) or not share(e["own"])
+                or isinstance(e["source_run"], bool) or not isinstance(e["source_run"], int)):
+            problems.append("review.edit must carry editor (non-blank string), kept and own "
+                            "(shares 0..1) and source_run (integer)")
     if review["conflict_display"] not in CONFLICT_DISPLAY_STATES:
         problems.append(f"review.conflict_display not one of {CONFLICT_DISPLAY_STATES}")
     if review["source_span"] not in SOURCE_SPAN_STATES:

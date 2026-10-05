@@ -49,6 +49,13 @@ ENTRY_CANDIDATE_FIELDS = {
     "extractor", "run_manifest",
 }
 MAPPING_CANDIDATE_FIELDS = {"kind", "yaml_draft", "pack", "standard", "author"}
+# AR-rag4ds-027 r2 O3 / r3 F9: the machine extractor identities the module ships -
+# exactly the names the strategies in extract/strategies.py call themselves. A
+# candidate's extractor is one of these or 'author:<name>'; any other token
+# ("siriweera", "t.a.siriweera", "designee") is refused, so nothing reaches the
+# gate as a machine proposal while naming a person. A new strategy registers its
+# name here (the test suite checks every strategy's name is listed).
+KNOWN_EXTRACTORS = frozenset({"rule-v1", "embed-v1"})
 
 
 class StagingError(ValueError):
@@ -122,6 +129,17 @@ def validate_candidate(candidate: dict) -> None:
             problems.append("span_start/span_end must be character offsets with 0 <= start < end")
         if not _nonblank(candidate["extractor"]):
             problems.append("extractor identity must be a non-blank string")
+        else:
+            ex = candidate["extractor"]
+            # AR-rag4ds-027 F3, r2 O3, r3 F9: an extractor is one of exactly two forms - a
+            # registered machine strategy id (KNOWN_EXTRACTORS) or 'author:<name>' with a
+            # non-blank name. Any other token ('Author:', a look-alike in another script,
+            # 'by:', a bare person's name) is refused here.
+            is_author = ex.startswith("author:") and bool(ex[len("author:"):].strip())
+            if not is_author and ex not in KNOWN_EXTRACTORS:
+                problems.append(f"extractor {ex!r} is neither a registered machine strategy id "
+                                f"({', '.join(sorted(KNOWN_EXTRACTORS))}) nor 'author:<name>' "
+                                f"with a non-blank name")
         if not _nonblank(candidate["run_manifest"]):
             problems.append("run_manifest reference must be a non-blank string")
     else:

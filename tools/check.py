@@ -1,7 +1,11 @@
 """The one check entry point (9.2): every CI job is this script, and this
-script runs identically on the local machine. Runs ruff, pytest, and both
-scan tools; exits non-zero on the first failure. No step is optional and
-no failure is swallowed.
+script runs identically on the local machine. Runs ruff, pytest, the NFR6
+scan and both record scan tools; exits non-zero on the first failure. No
+step is optional and no failure is swallowed. The NFR6 scan (AR-rag4ds-026
+O13) needs the local copy of each non-redistributable corpus document
+(data/ or RAG4DS_DATA_DIR); where none exists - CI - it prints a named
+SKIPPED line and the step passes; a copy that is present but does not hash
+to the catalog fails the step.
 """
 
 import subprocess
@@ -14,12 +18,26 @@ REPO_ROOT = MODULE_ROOT.parents[1]
 STEPS = [
     (
         "ruff",
-        [sys.executable, "-m", "ruff", "check", "src", "tests", "tools"],
+        # no cache, so a local check writes no .ruff_cache into the synced tree
+        # (the repository's operating rules, section 3, applied to ruff; AR-rag4ds-055 r2 O8)
+        [sys.executable, "-m", "ruff", "check", "--no-cache", "src", "tests", "tools"],
         MODULE_ROOT,
     ),
     (
         "pytest",
-        [sys.executable, "-m", "pytest"],
+        # the cache provider off, so a local check writes no .pytest_cache into
+        # the synced tree (the repository's operating rules, section 3; AR-rag4ds-055 r1 O6)
+        [sys.executable, "-m", "pytest", "-p", "no:cacheprovider"],
+        MODULE_ROOT,
+    ),
+    (
+        "nfr6_scan",
+        [sys.executable, str(MODULE_ROOT / "tools" / "nfr6_scan.py"), "--skip-absent"],
+        MODULE_ROOT,
+    ),
+    (
+        "nfr3_scan",
+        [sys.executable, str(MODULE_ROOT / "tools" / "nfr3_scan.py")],
         MODULE_ROOT,
     ),
     (

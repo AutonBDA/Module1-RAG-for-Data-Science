@@ -86,8 +86,10 @@ def test_compile_then_reconstruction_is_byte_equal(tmp_path):
 
 def test_live_tree_is_reconstructable_from_the_live_journal():
     """Plan 9.2: the reconstruction test gates the repository's own journal
-    and tree (AR-rag4ds-016 O1). Trivially true today (empty journal,
-    .gitkeep-only trees); it catches the first hand-placed file."""
+    and tree (AR-rag4ds-016 O1). Since S8 (2026-09-12) this is live, not
+    vacuous: the journal holds the designee's 34 decisions and shared/general
+    and shared/tasks hold the 17 entries they fold to; a hand-placed, edited
+    or missing entry file fails it (AR-rag4ds-026 F9)."""
     assert_reconstructable(Journal(MODULE_ROOT / DECISION_JOURNAL), MODULE_ROOT)
 
 

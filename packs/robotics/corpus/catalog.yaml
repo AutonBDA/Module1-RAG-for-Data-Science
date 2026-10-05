@@ -1,0 +1,588 @@
+documents:
+- fetch_pointer: https://www.universal-robots.com/manuals/EN/PDF/SW5_19/service-manual_e-series/e-Series_Service_Manual_en.pdf
+  hash: d1d050ebb99338bd4980cbe4991329d9dc06f0afc4b7272ed80393333af10590
+  license: proprietary - copyright Universal Robots A/S, all rights reserved; publicly
+    downloadable from the manufacturer, NOT redistributable; raw copy and extracted
+    text kept outside git (NFR6)
+  metadata:
+    authors: Universal Robots A/S
+    chars: 122962
+    extraction: pypdf 6.16.1 PdfReader extract_text(extraction_mode=layout), CR removed,
+      pages joined by two newlines, UTF-8, LF
+    extraction_mode: layout
+    licence_evidence: marker 'information contained herein' found in the text (the
+      page-3 proprietary notice; AR-rag4ds-028 F4 - metadata corrected by hand, document
+      unchanged)
+    other_pypdf_warnings: 0
+    pages: 104
+    pdf_file: e-Series_Service_Manual_en.pdf
+    pdf_sha256: 88c82f8060f622748899cb8fb2346ffee057f97c834f7498a6400a8431dc5b55
+    pypdf: 6.16.1
+    rotated_text_warnings: 102
+    title: e-Series Service Handbook (UR3e, UR5e, UR10e, UR16e, e-Series Control box,
+      OEM Control Box), software 5.19
+    venue: manufacturer service documentation
+    year: '2024'
+  redistributable: false
+- fetch_pointer: https://www.universal-robots.com/manuals/EN/PDF/Shared/ErrorCodes/ErrorCodes.pdf
+  hash: dac2a3bb9dc86f1614d1171ac9c8c17bb8ba8b9945d95823ec8e5534a24dfcc7
+  license: proprietary - copyright Universal Robots A/S, all rights reserved; publicly
+    downloadable from the manufacturer, NOT redistributable; raw copy and extracted
+    text kept outside git (NFR6)
+  metadata:
+    authors: Universal Robots A/S
+    chars: 456808
+    extraction: pypdf 6.16.1 PdfReader extract_text(extraction_mode=layout), CR removed,
+      pages joined by two newlines, UTF-8, LF
+    extraction_mode: layout
+    licence_evidence: marker 'information contained herein' found in the text (the
+      page-3 proprietary notice; AR-rag4ds-028 F4 - metadata corrected by hand, document
+      unchanged)
+    other_pypdf_warnings: 0
+    pages: 168
+    pdf_file: ErrorCodes.pdf
+    pdf_sha256: 3854dc2a9dbd8c39b31a639ea36382f77df9ccb3ea62710565d409cb97866a25
+    pypdf: 6.16.1
+    rotated_text_warnings: 166
+    title: Error Codes Directory, All Robots, PolyScope 5.26
+    venue: manufacturer service documentation
+    year: '2026'
+  redistributable: false
+- fetch_pointer: https://www.universal-robots.com/manuals/EN/PDF/Shared/joint-manual_e-Series_online/738-379-00_E-Series_e-Series_en_Global.pdf
+  hash: 0573874a0eb07da2e86e6ebff692cc76962fa488fe53699d7597bc4db33687f2
+  license: proprietary - copyright Universal Robots A/S, all rights reserved; publicly
+    downloadable from the manufacturer, NOT redistributable; raw copy and extracted
+    text kept outside git (NFR6)
+  metadata:
+    authors: Universal Robots A/S
+    chars: 53692
+    extraction: pypdf 6.16.1 PdfReader extract_text(extraction_mode=layout), CR removed,
+      pages joined by two newlines, UTF-8, LF
+    extraction_mode: layout
+    licence_evidence: marker 'information contained herein' found in the text (the
+      page-3 proprietary notice; AR-rag4ds-028 F4 - metadata corrected by hand, document
+      unchanged)
+    other_pypdf_warnings: 0
+    pages: 42
+    pdf_file: 738-379-00_E-Series_e-Series_en_Global.pdf
+    pdf_sha256: 85846a2810e10292518475bbde9622257e246a935aa425b6d11a8c46671e0484
+    pypdf: 6.16.1
+    rotated_text_warnings: 20
+    title: Joint Replacement Manual, e-Series (document 738-379-00)
+    venue: manufacturer service documentation
+    year: '2026'
+  redistributable: false
+- fetch_pointer: https://www.sciencedirect.com/science/article/pii/S2590123024006522
+  hash: 881e668df80060508ae9917cf661c3b8d7fee7c000920e3cf67a8ce4020e59b8
+  license: 'CC BY-NC-ND 4.0 (stated on the article''s first page) - NoDerivatives
+    and NonCommercial: the module may quote under the bound and cite, never re-publish;
+    NOT redistributable'
+  metadata:
+    authors: Ameer H. Sabry, Ungku Anisa Bte Ungku Amirulddin
+    chars: 118371
+    doi: 10.1016/j.rineng.2024.102397
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, UTF-8, LF
+    extraction_mode: plain
+    licence_evidence: marker 'cc by-nc-nd license' found in the text
+    other_pypdf_warnings: 0
+    pages: 17
+    pdf_file: 1-s2.0-S2590123024006522-main.pdf
+    pdf_sha256: 97815cb54c5d38a9e94ffa3da3a0e9122896b56e92bb1f86698b2dac749ae248
+    pypdf: 6.16.1
+    rotated_text_warnings: 0
+    title: A review on fault detection and diagnosis of industrial robots and multi-axis
+      machines
+    venue: Results in Engineering 23 (2024) 102397
+    year: '2024'
+  redistributable: false
+- fetch_pointer: https://arxiv.org/abs/2402.02980v1
+  hash: 21f0a15a1bbbeb0e5c60a4f1d97a09df17fa69a29b0625948bed6f4f0809414a
+  license: CC BY 4.0 - the arXiv abstract page carries the licence badge linking http://creativecommons.org/licenses/by/4.0/
+    ("Rights to this article"; read 2026-09-13 23:27 JST); the PDF itself carries
+    no licence line (AR-rag4ds-028 O8)
+  metadata:
+    authors: Md Muzakkir Quamar, Ali Nasir
+    chars: 156907
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, UTF-8, LF
+    extraction_mode: plain
+    licence_evidence: publisher page (see license)
+    other_pypdf_warnings: 0
+    pages: 24
+    pdf_file: 2402.02980v1.pdf
+    pdf_sha256: fa6c0b56f7c1ac46d2a6a818c0b7c26d451bfe79b7d75feaea2243d43478b978
+    pypdf: 6.16.1
+    rotated_text_warnings: 0
+    title: 'Review on Fault Diagnosis and Fault-Tolerant Control Scheme for Robotic
+      Manipulators: Recent Advances in AI, Machine Learning, and Digital Twin'
+    venue: arXiv:2402.02980v1
+    year: '2024'
+  redistributable: true
+- fetch_pointer: https://www.mdpi.com/2076-0825/14/12/583
+  hash: 128f4d629779a2c987f5c2c845b9fb487d2ee09a0c690bab766c329c790b9167
+  license: CC BY 4.0 (stated on the article's first page; MDPI open access)
+  metadata:
+    authors: Heonkook Kim
+    chars: 50156
+    doi: 10.3390/act14120583
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, UTF-8, LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution (cc by) license' found
+      in the text
+    other_pypdf_warnings: 0
+    pages: 17
+    pdf_file: actuators-14-00583.pdf
+    pdf_sha256: a24e4b4e2dfa21d06e03899109ca8c395443a8d62c4b164af48439e1d4f73315
+    pypdf: 6.16.1
+    rotated_text_warnings: 0
+    title: Fault Diagnosis in Robot Drive Systems Using Data-Driven Dynamics Learning
+    venue: Actuators 2025, 14, 583
+    year: '2025'
+  redistributable: true
+- fetch_pointer: https://www.mdpi.com/1424-8220/25/1/25
+  hash: b5669410b419d06e2657e8e4e7f694cffe14bd68ba0302aa63772712baff2d79
+  license: CC BY 4.0 (stated on the article's first page; MDPI open access)
+  metadata:
+    authors: Chanthol Eang, Seungjae Lee
+    chars: 132385
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, UTF-8, LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution (cc by) license' found
+      in the text
+    other_pypdf_warnings: 0
+    pages: 30
+    pdf_file: sensors-25-00025.pdf
+    pdf_sha256: 8ed39331142d4059fa521a469fffc756b1b07d1873f4940128facc2b86cecf74
+    pypdf: 6.16.1
+    rotated_text_warnings: 0
+    title: Predictive Maintenance and Fault Detection for Motor Drive Control Systems
+      in Industrial Robots Using CNN-RNN-Based Observers
+    venue: Sensors 2025, 25, 25 (the PDF's first page carries the publisher's DOI
+      placeholder; the article number is from the fetch URL)
+    year: '2025'
+  redistributable: true
+- fetch_pointer: https://www.mdpi.com/1424-8220/25/6/1716
+  hash: 303e9b2cd5e96e4d6e88a3b2c148be06f1f9e7e29c654e7a448fcc5b709cdbbb
+  license: CC BY 4.0 (stated on the article's first page; MDPI open access)
+  metadata:
+    authors: Yuepeng Zhang, Jun Wu, Bo Gao, Linzhong Xia, Chen Lu, Hui Wang, Guangzhong
+      Cao
+    chars: 121289
+    doi: 10.3390/s25061716
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, UTF-8, LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution (cc by) license' found
+      in the text
+    other_pypdf_warnings: 0
+    pages: 28
+    pdf_file: sensors-25-01716.pdf
+    pdf_sha256: d4beec8eceef8a03aae3b0f90756bccab7e6e0108ab834004109710947cdddc3
+    pypdf: 6.16.1
+    rotated_text_warnings: 0
+    title: 'Fault Types and Diagnostic Methods of Manipulator Robots: A Review'
+    venue: Sensors 2025, 25, 1716
+    year: '2025'
+  redistributable: true
+- fetch_pointer: https://archive.ics.uci.edu/dataset/138/robot+execution+failures
+  hash: cdfbe0b260f4a21c5249fe0da4b1baf4041959663a9182253885ee1f41a4568e
+  license: CC BY 4.0 - the UCI dataset page states "This dataset is licensed under
+    a Creative Commons Attribution 4.0 International (CC BY 4.0) license" (read 2026-09-13
+    23:27 JST; AR-rag4ds-028 O8)
+  metadata:
+    archive_members:
+    - a.out
+    - format.c
+    - lp1.data
+    - lp2.data
+    - lp3.data
+    - lp4.data
+    - lp5.data
+    - robot
+    - robotfailure.data.html
+    - robotfailure.html
+    authors: Luis Seabra Lopes, Luis Camarinha-Matos
+    doi: 10.24432/C5M89N
+    licence_evidence: publisher page (see license)
+    role: telemetry shape for the demo flows (FR9); not knowledge text
+    title: 'Robot Execution Failures (UCI Machine Learning Repository, dataset 138):
+      force and torque time series after failure detection, five learning problems'
+    venue: UCI Machine Learning Repository
+    year: '1998'
+  redistributable: true
+- fetch_pointer: https://papers.phmsociety.org/index.php/phme/article/view/2849
+  hash: 7eb24ec54b039556c30b2e034d13241747c492790960847285a82005f17aa22e
+  license: CC BY 3.0 (stated on the article's first page; PHM Society open access)
+  metadata:
+    authors: Andrea Raviola, Andrea De Martin, Roberto Guida, Giovanni Jacazio, Stefano
+      Mauro, Massimo Sorli
+    chars: 53287
+    doi: 10.36001/phme.2021.v6i1.2849
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, UTF-8, LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution 3' found in the text
+    other_pypdf_warnings: 0
+    pages: 11
+    pdf_file: phme2021_2849.pdf
+    pdf_sha256: 6e551358109c51795591ad95f90e4e10864a9df1872462a26bea48af840a7068
+    pypdf: 6.16.1
+    role: how harmonic drives actually fail in industrial service - the component
+      the pack predicts failures in, which no catalogued document described; recommended
+      by the team and accepted by the validator 2026-09-21 (his word relayed by the
+      PI; docs/s9_robotics_pack.md 17.1, 19.1)
+    rotated_text_warnings: 0
+    title: 'Harmonic Drive Gear Failures in Industrial Robots Applications: An Overview'
+    venue: PHM Society European Conference 6(1), 2021
+    year: '2021'
+  redistributable: true
+- fetch_pointer: https://papers.phmsociety.org/index.php/phme/article/view/4957
+  hash: 0ba5436d3d4f601c64636bbbc667472aefd80a68f94c938f1bda9e97157077b3
+  license: CC BY 3.0 (stated on the article's first page; PHM Society open access)
+  metadata:
+    authors: Samuel Ayankoso, Huanqing Han, Hamidreza Fahham, Gareth Tucker, Helen
+      Miao, Fengshou Gu
+    chars: 44730
+    doi: 10.36001/phme.2026.v9i1.4957
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, UTF-8, LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution 3' found in the text
+    other_pypdf_warnings: 0
+    pages: 10
+    pdf_file: phme2026_4957.pdf
+    pdf_sha256: 6e029278670f4f6369a79df2ae233edd47e978deb320544b5d2a36b47acbca2e
+    pypdf: 6.16.1
+    role: which measured signals expose which reducer fault - the bridge from the
+      pack's telemetry vocabulary to its failure vocabulary; recommended by the team
+      and accepted by the validator 2026-09-21 (his word relayed by the PI; docs/s9_robotics_pack.md
+      17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Fault Diagnosis of Harmonic Reducers Used in Industrial Collaborative Robots
+      via DWT, MB-FFT, EMD and Machine Learning Classifiers (RF, XGBoost, SVM and
+      KNN)
+    venue: PHM Society European Conference 9(1), 2026
+    year: '2026'
+  redistributable: true
+- fetch_pointer: https://doi.org/10.3390/machines12110776
+  hash: 2e5fc60cb7b3c88547a36cc9fac92bee082c6e5173cb31834b63a75afd2518ee
+  license: CC BY 4.0 (stated on the article's first page; MDPI open access)
+  metadata:
+    authors: Roberto Guida, Antonio Carlo Bertolino, Andrea De Martin, Massimo Sorli
+    chars: 104253
+    doi: 10.3390/machines12110776
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, UTF-8, LF
+    extraction_mode: plain
+    licence_evidence: marker 'attribution (cc by) license' found in the text
+    other_pypdf_warnings: 0
+    pages: 29
+    pdf_file: machines-12-00776.pdf
+    pdf_sha256: 8ccd6378b83c76239b8a6590850c73afa2cfaec4bfdb833cddc88ddffb87b4db
+    pypdf: 6.16.1
+    role: the fault-to-failure mechanisms of the harmonic drive on a UR5 - the pack's
+      robot family and the component it predicts failures in; recommended by the team
+      and accepted by the validator 2026-09-21 (his word relayed by the PI; docs/s9_robotics_pack.md
+      17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Comprehensive Analysis of Major Fault-to-Failure Mechanisms in Harmonic
+      Drives
+    venue: Machines 12(11):776, 2024
+    year: '2024'
+  redistributable: true
+- fetch_pointer: https://doi.org/10.1093/jcde/qwac015
+  hash: dd2b537db1dfe3cfa84f98c462a060221bc4259d7c52fec2eda912316dc7208d
+  license: CC BY 4.0 (stated on the article's first page; Oxford University Press
+    open access)
+  metadata:
+    authors: Izaz Raouf, Hyewon Lee, Heung Soo Kim
+    chars: 162845
+    doi: 10.1093/jcde/qwac015
+    extraction: pypdf 6.16.1 PdfReader extract_text(extraction_mode=layout), CR removed,
+      pages joined by two newlines, UTF-8, LF
+    extraction_mode: layout
+    licence_evidence: marker 'creative commons attribution license' found in the text
+    other_pypdf_warnings: 0
+    pages: 17
+    pdf_file: qwac015.pdf
+    pdf_sha256: 197ab6bb1f21fb4689262ceaa5153fd99c90cc06b2e8d75b1ed4c3d068e88384
+    pypdf: 6.16.1
+    role: RV reducer faults read from the motor current - the pack's own telemetry
+      signal; recommended by the team and accepted by the validator 2026-09-21 (his
+      word relayed by the PI; docs/s9_robotics_pack.md 17.1, 19.1)
+    rotated_text_warnings: 17
+    title: 'Mechanical fault detection based on machine learning for robotic RV reducer
+      using electrical current signature analysis: a data-driven approach'
+    venue: Journal of Computational Design and Engineering 9(2):417-433, 2022
+    year: '2022'
+  redistributable: true
+- fetch_pointer: https://doi.org/10.1155/2024/2735335
+  hash: 5b352dd750fb8573fe225f919cb68ad9029bff43c9fe3e4693eeacb46cb70ebb
+  license: CC BY 4.0 (stated on the article's first page; Wiley/Hindawi open access)
+  metadata:
+    authors: Heng Li, Bing Zhao, Jingyang Li, Yueqi Qiao, Shen Zhang
+    chars: 66050
+    doi: 10.1155/2024/2735335
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution license' found in the text
+    lone_surrogates: 23
+    other_pypdf_warnings: 0
+    pages: 19
+    pdf_file: International Journal of Rotating Machinery - 2024 - Li - Research on
+      Local Fault Diagnosis of Rotary Vector Reducer Based.pdf
+    pdf_sha256: e29bd422fa22ffcd75b5c21e730ce1b56a5fe0e140faca0dc5948c338e03c1be
+    pypdf: 6.16.1
+    role: a second, independent account of RV reducer faults in the motor current;
+      recommended by the team and accepted by the validator 2026-09-21 (his word relayed
+      by the PI; docs/s9_robotics_pack.md 17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Research on Local Fault Diagnosis of Rotary Vector Reducer Based on Motor
+      Current Signature Analysis
+    venue: International Journal of Rotating Machinery 2024(1), 2024
+    year: '2024'
+  redistributable: true
+- fetch_pointer: https://doi.org/10.1016/j.heliyon.2024.e40115
+  hash: 669355f9edf346f9f274ee30ad63abc492448a05cae4507a0c938b01b288bcdb
+  license: 'CC BY-NC-ND 4.0 (stated on the article''s first page) - NoDerivatives
+    and NonCommercial: the module may quote under the bound and cite, never redistribute
+    an adapted text; raw copy and extracted text kept outside git'
+  metadata:
+    authors: Dongdong Guo, Yan Zhang, Xiangqun Chen, Hao Peng, Zongrui Jiang, Haitao
+      Ma, Wenbo Du
+    chars: 35279
+    doi: 10.1016/j.heliyon.2024.e40115
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: marker 'cc by-nc-nd license' found in the text
+    lone_surrogates: 0
+    other_pypdf_warnings: 0
+    pages: 17
+    pdf_file: PIIS2405844024161464.pdf
+    pdf_sha256: 0e6bbc5b2637c253bf1c12b8dc079db48e7137499151c4ea92da1c9b4c234ef8
+    pypdf: 6.16.1
+    role: RV reducer fault identification on an industrial robot; recommended by the
+      team and accepted by the validator 2026-09-21 (his word relayed by the PI; docs/s9_robotics_pack.md
+      17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Data-driven fault identification method of RV reducer used in industrial
+      robot
+    venue: Heliyon 10(22):e40115, 2024
+    year: '2024'
+  redistributable: false
+- fetch_pointer: https://doi.org/10.1109/JSEN.2021.3137992
+  hash: eda74cd5d4c59c3c8a8b2a80135f438c76b1eb8207627e1037105266eb8d529e
+  license: IEEE copyright 2021 - personal use permitted, republication and redistribution
+    require IEEE permission; obtained through the university's IEEE Xplore licence;
+    NOT redistributable; raw copy and extracted text kept outside git (NFR6)
+  metadata:
+    authors: Zhuo Zhi, Liansheng Liu, Datong Liu, Cong Hu
+    chars: 46978
+    doi: 10.1109/JSEN.2021.3137992
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: marker '2021 ieee. personal use is permitted' found in the text
+    lone_surrogates: 0
+    other_pypdf_warnings: 0
+    pages: 10
+    pdf_file: Fault_Detection_of_the_Harmonic_Reducer_Based_on_CNN-LSTM_With_a_Novel_Denoising_Algorithm.pdf
+    pdf_sha256: e81d546d336197b4a604ecb3b761538268c8ecaf7bfad3371f32853a04d57d82
+    pypdf: 6.16.1
+    role: harmonic reducer fault detection from measured signals; recommended by the
+      team and accepted by the validator 2026-09-21 (his word relayed by the PI; docs/s9_robotics_pack.md
+      17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Fault Detection of the Harmonic Reducer Based on CNN-LSTM With a Novel
+      Denoising Algorithm
+    venue: IEEE Sensors Journal 22(3):2572-2581, 2022
+    year: '2022'
+  redistributable: false
+- fetch_pointer: https://doi.org/10.1109/JSEN.2024.3467162
+  hash: e044b7d73199eebd63a2e7671676ce911ee805c2fea5bd5ebeea9587abf8abaf
+  license: IEEE copyright 2024 - personal use permitted, republication and redistribution
+    require IEEE permission; obtained through the university's IEEE Xplore licence;
+    NOT redistributable; raw copy and extracted text kept outside git (NFR6)
+  metadata:
+    authors: Xiangning Guan, Fengqin Huang, Xiaoguang Ma, Yuxing Dai, Jinping Xie,
+      Hao Wang
+    chars: 51134
+    doi: 10.1109/JSEN.2024.3467162
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: marker '2024 ieee. personal use is permitted' found in the text
+    lone_surrogates: 0
+    other_pypdf_warnings: 0
+    pages: 11
+    pdf_file: Few-Shot_Fault_Diagnosis_of_Harmonic_Reducer_of_Industrial_Robot_Based_on_TCIFMN.pdf
+    pdf_sha256: 75d63e386adc0f1e8af310f4bef1bae5197d96716acc9cc03dc553ca2a32433d
+    pypdf: 6.16.1
+    role: harmonic reducer faults on an industrial robot with few labelled examples;
+      recommended by the team and accepted by the validator 2026-09-21 (his word relayed
+      by the PI; docs/s9_robotics_pack.md 17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Few-Shot Fault Diagnosis of Harmonic Reducer of Industrial Robot Based
+      on TCIFMN
+    venue: IEEE Sensors Journal 24(22):38298-38308, 2024
+    year: '2024'
+  redistributable: false
+- fetch_pointer: https://doi.org/10.36001/ijphm.2016.v7i2.2365
+  hash: deb8e4da3c4b91219d4e27f0c8b8b60a26cb6bde24c1e21b0517391e1cec01bd
+  license: CC BY 3.0 US (stated on the article's first page; PHM Society open access)
+  metadata:
+    authors: Alaa Abdulhady Jaber, Robert Bicker
+    chars: 53494
+    doi: 10.36001/ijphm.2016.v7i2.2365
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution 3.0 united states license'
+      found in the text
+    lone_surrogates: 0
+    other_pypdf_warnings: 0
+    pages: 13
+    pdf_file: ijphm2016_2365.pdf
+    pdf_sha256: c789d664e6c8ecf871a9ce43b9fdbb67ccde66c7295f3d4613e08e4b0c89e9e5
+    pypdf: 6.16.1
+    role: joint bearing faults - a component in the pack's vocabulary that no catalogued
+      document described; recommended by the team and accepted by the validator 2026-09-21
+      (his word relayed by the PI; docs/s9_robotics_pack.md 17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Fault Diagnosis of Industrial Robot Bearings Based on Discrete Wavelet
+      Transform and Artificial Neural Network
+    venue: International Journal of Prognostics and Health Management 7(2), 2016
+    year: '2016'
+  redistributable: true
+- fetch_pointer: https://doi.org/10.1038/s41598-025-09272-9
+  hash: bb11464ae006d0f5a360c86f63c84ee7eeb670a22644b2d68f9b55d21b97e10b
+  license: 'CC BY-NC-ND 4.0 (stated in the article''s Open Access paragraph) - NoDerivatives
+    and NonCommercial: the module may quote under the bound and cite, never redistribute
+    an adapted text; raw copy and extracted text kept outside git'
+  metadata:
+    authors: Muhamad Azhar Abdilatef Alobaidy, Jassim M. Abdul-Jabbar, Mohammed Aly,
+      Reza Hassanpour
+    chars: 65323
+    doi: 10.1038/s41598-025-09272-9
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution-noncommercial-noderivatives'
+      found in the text
+    lone_surrogates: 0
+    other_pypdf_warnings: 0
+    pages: 17
+    pdf_file: s41598-025-09272-9.pdf
+    pdf_sha256: 08ca5a8f21c7db7f07562747f32f5f8c242d33ec876364fd2eb85b2fdca171fe
+    pypdf: 6.16.1
+    role: multi-joint fault detection on an industrial robot from acceleration data;
+      recommended by the team and accepted by the validator 2026-09-21 (his word relayed
+      by the PI; docs/s9_robotics_pack.md 17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Real time fault diagnosis in industrial robotics using discrete and slantlet
+      wavelet transformations
+    venue: Scientific Reports 15, 2025
+    year: '2025'
+  redistributable: false
+- fetch_pointer: https://doi.org/10.1038/s41598-026-47066-9
+  hash: 6037104c2f4b02b62c03588934bf3e8bdc1665c7fc178e1cd4652058eb1fc4b7
+  license: 'CC BY-NC-ND 4.0 (stated in the article''s Open Access paragraph) - NoDerivatives
+    and NonCommercial: the module may quote under the bound and cite, never redistribute
+    an adapted text; raw copy and extracted text kept outside git'
+  metadata:
+    authors: Zhiguang Yao, Haocheng Zhao, Yanhui Wang, Chenghao Xu
+    chars: 75385
+    doi: 10.1038/s41598-026-47066-9
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: marker 'creative commons attribution-noncommercial-noderivatives'
+      found in the text
+    lone_surrogates: 0
+    other_pypdf_warnings: 0
+    pages: 20
+    pdf_file: s41598-026-47066-9.pdf
+    pdf_sha256: ff98354459f0f38ee50fb578e98b947d9be0a7a585ff5b4d0d52766ef6202ac2
+    pypdf: 6.16.1
+    role: transmission-component faults across machines and under sensor failure -
+      the pack's subject from the data side; recommended by the team and accepted by
+      the validator 2026-09-21 (his word relayed by the PI; docs/s9_robotics_pack.md
+      17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Industrial robot transmission components cross-machines fault diagnosis
+      via fault intrinsic representation and channel self-healing under sensor failure
+    venue: Scientific Reports 16, 2026
+    year: '2026'
+  redistributable: false
+- fetch_pointer: https://arxiv.org/abs/2102.01409
+  hash: eb58e5ecd8aba895292f575900f0241a26ac2aa73a9acf6971fce203e92fd5b8
+  license: arXiv non-exclusive licence to distribute (arxiv.org/licenses/nonexclusive-distrib/1.0,
+    stated on the arXiv abstract page; the PDF itself carries no licence text) - NOT
+    redistributable by the module; raw copy and extracted text kept outside git (NFR6)
+  metadata:
+    authors: Blazej Leporowski, Daniella Tola, Casper Hansen, Alexandros Iosifidis
+    chars: 44500
+    doi: null
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: publisher page (see license)
+    lone_surrogates: 0
+    other_pypdf_warnings: 0
+    pages: 27
+    pdf_file: arxiv-2102.01409.pdf
+    pdf_sha256: 46b25bfda22733af0bcb65432f734f9bbb50f91d99933ccd0c027eca5f5d899e
+    pypdf: 6.16.1
+    role: a Universal Robots telemetry dataset with joint currents and torques - the
+      pack's robot family and signals, and the demo-flow data the plan needs (FR9);
+      recommended by the team and accepted by the validator 2026-09-21 (his word relayed
+      by the PI; docs/s9_robotics_pack.md 17.1, 19.1)
+    rotated_text_warnings: 0
+    title: 'AURSAD: Universal Robot Screwdriving Anomaly Detection Dataset'
+    venue: arXiv 2102.01409 (cs.LG), 2021
+    year: '2021'
+  redistributable: false
+- fetch_pointer: https://doi.org/10.1109/PHM-Yantai55411.2022.9941774
+  hash: 0f49dc34491149bac97266e52e0d33f928899014a6c5683fdbf0d0916f42394a
+  license: IEEE copyright 2022 (conference paper) - personal use permitted, republication
+    and redistribution require IEEE permission; obtained through the university's
+    IEEE Xplore licence; NOT redistributable; raw copy and extracted text kept outside
+    git (NFR6)
+  metadata:
+    authors: Ran Fu, Lei Xiao, Baiteng Ma
+    chars: 37966
+    doi: 10.1109/PHM-Yantai55411.2022.9941774
+    extraction: pypdf 6.16.1 PdfReader extract_text(plain), CR removed, pages joined
+      by two newlines, lone surrogates replaced by U+FFFD (count recorded), UTF-8,
+      LF
+    extraction_mode: plain
+    licence_evidence: marker '2022 ieee' found in the text
+    lone_surrogates: 0
+    other_pypdf_warnings: 0
+    pages: 8
+    pdf_file: Unsupervised_Fault_Detection_of_Industrial_Robot_Joints_Using_Current_Signal.pdf
+    pdf_sha256: 045467b25c676eb87dc931883aee34ddd1a43d3fe6b9040cc4c5eec2b9a52599
+    pypdf: 6.16.1
+    role: robot joint faults found in the current signal without labels; recommended
+      by the team and accepted by the validator 2026-09-21 (his word relayed by the
+      PI; docs/s9_robotics_pack.md 17.1, 19.1)
+    rotated_text_warnings: 0
+    title: Unsupervised Fault Detection of Industrial Robot Joints Using Current Signal
+    venue: 2022 Global Reliability and Prognostics and Health Management (PHM-Yantai)
+    year: '2022'
+  redistributable: false
+pack: robotics
+schema: 1

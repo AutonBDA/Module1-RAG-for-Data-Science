@@ -24,6 +24,7 @@ from types import MappingProxyType
 
 from rag4ds.model.entry import ENTRY_ID_RE, LAYERS, SHARED_PACK
 from rag4ds.model.entry import STATUSES as ENTRY_STATUSES
+from rag4ds.model.render import shown  # the refusals below print through it (r4 F7)
 
 CONTRACT_SCHEMA_VERSION = 1
 STATUS_OK = "OK"
@@ -62,21 +63,22 @@ class GroundingRequest:
         if not isinstance(self.query, str) or not self.query.strip():
             problems.append("query must be a non-blank string")
         if self.layer is not None and self.layer not in LAYERS:
-            problems.append(f"layer {self.layer!r} not one of {LAYERS}")
+            problems.append(f"layer {shown(self.layer)} not one of {LAYERS}")
         if self.domain is not None and (
             not isinstance(self.domain, str)
             or not ENTRY_ID_RE.fullmatch(self.domain)
             or self.domain == SHARED_PACK
         ):
-            problems.append(f"domain {self.domain!r} must be a pack code (never {SHARED_PACK!r})")
+            problems.append(f"domain {shown(self.domain)} must be a pack code "
+                            f"(never {SHARED_PACK!r})")
         if self.phase is not None and self.phase not in CRISP_DM_PHASES:
-            problems.append(f"phase {self.phase!r} not one of {CRISP_DM_PHASES}")
+            problems.append(f"phase {shown(self.phase)} not one of {CRISP_DM_PHASES}")
         if (
             not isinstance(self.top_k, int)
             or isinstance(self.top_k, bool)
             or not 1 <= self.top_k <= MAX_TOP_K
         ):
-            problems.append(f"top_k must be an integer in 1..{MAX_TOP_K}, got {self.top_k!r}")
+            problems.append(f"top_k must be an integer in 1..{MAX_TOP_K}, got {shown(self.top_k)}")
         if self.pins is not None:
             if not isinstance(self.pins, dict):
                 problems.append("pins must be a mapping of pack code -> version string")
@@ -89,7 +91,8 @@ class GroundingRequest:
                         or not isinstance(v, str)
                         or not v.strip()
                     ):
-                        problems.append(f"pin {k!r}: {v!r} must be pack code -> non-blank version")
+                        problems.append(f"pin {shown(k)}: {shown(v)} must be pack code -> "
+                                        f"non-blank version")
         if problems:
             raise GroundingRequestError(
                 f"request invalid ({len(problems)} problem(s)): " + "; ".join(problems)

@@ -1,0 +1,34 @@
+documents:
+- fetch_pointer: 'https://www.kde.cs.uni-kassel.de/wp-content/uploads/lehre/ws2012-13/kdd/files/CRISPWP-0800.pdf
+    (PDF sha256 1dd1f0b01e74777d265b3f59ecd6f697a7799df5fc13528bba4da6d661ec5804;
+    text extracted with pypdf 6.16.1: PdfReader pages joined by two newlines)'
+  hash: aee4b0cba8797a19e37acc76a82abb4fbfa26195b7960592b0c13778bab346a5
+  license: proprietary - copyright 1999, 2000 the CRISP-DM consortium (NCR Systems
+    Engineering Copenhagen, DaimlerChrysler AG, SPSS Inc., OHRA); publicly distributed,
+    NOT redistributable; raw text kept outside git (NFR6)
+  metadata:
+    authors: Chapman, Clinton, Kerber, Khabaza, Reinartz, Shearer, Wirth
+    pages: 78
+    pdf_sha256: 1dd1f0b01e74777d265b3f59ecd6f697a7799df5fc13528bba4da6d661ec5804
+    title: CRISP-DM 1.0 Step-by-step data mining guide
+    year: '2000'
+  redistributable: false
+- fetch_pointer: authoring/sources/shared-task-patterns.md (this repository)
+  hash: 752affb8287bdbbfde358d8cbe1ea6363e461bb0ab01141a759ab8425127bff9
+  license: Apache-2.0 (the module's own licence; the team's original text)
+  metadata:
+    authors: Module 1 team (T. A. Siriweera)
+    title: 'Shared-layer source note: task patterns and core vocabulary'
+    year: '2026'
+  redistributable: true
+- fetch_pointer: authoring/sources/shared-task-patterns-2.md (this repository)
+  hash: 6ec20e687a5ea5ccd98fabffa56f1809a9cea805cfe0b5a78e4d0e5b7c80911c
+  license: Apache-2.0 (the module's own licence; the team's original text)
+  metadata:
+    authors: Module 1 team (T. A. Siriweera; the added sentence by the team)
+    title: 'Shared-layer source note, part 2: anomaly detection in machine condition
+      monitoring'
+    year: '2026'
+  redistributable: true
+pack: shared
+schema: 1

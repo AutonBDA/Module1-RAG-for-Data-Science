@@ -60,6 +60,7 @@ tree (F9). Concurrency: one session per journal at a time.
 
 from __future__ import annotations
 
+import difflib
 import hashlib
 import re
 import sys
@@ -67,6 +68,7 @@ import tempfile
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
+from io import UnsupportedOperation
 from pathlib import Path
 from typing import Callable
 
@@ -77,6 +79,14 @@ from rich.table import Table
 from rich.text import Text
 
 from rag4ds.auditlog.journal import Journal
+from rag4ds.author.drafts import MIN_PASSAGE_COVERAGE, author_of, passage_coverage
+from rag4ds.extract.strategy import quotation_bound_check
+from rag4ds.gate.identities import (
+    GATING_ROLES,
+    IDENTITIES_FILE,
+    IdentityError,
+    IdentityRegistry,
+)
 from rag4ds.gate.decisions import (
     APPROVAL_TYPES,
     DecisionError,
@@ -92,8 +102,54 @@ from rag4ds.staging.store import StagingError, StagingStore
 
 GATE_SESSION_SCHEMA_VERSION = 1
 KEYS = ("a", "e", "r", "g", "s", "q")
+# the three prompts a scripted reader answers (tools/gate_sheet.py imports them -
+# AR-rag4ds-032 O2, AR-rag4ds-034 O4: one literal each, no drift)
+KEY_PROMPT = "[a]pprove [e]dit-then-approve [r]eject [g]roup [s]kip [q]uit: "
+REASON_PROMPT = "reason: "
+HEAD_PROMPT = "head candidate id: "
+# AR-rag4ds-027 F2/F7 - the edit line, in the measure it uses. Two shares, from
+# difflib's matching blocks between the candidate's text and the edited text:
+#   kept = matched characters / len(candidate)   - how much of the candidate survives
+#   own  = 1 - matched characters / len(edited)  - how much of the entry the editor wrote
+# An edit keeps at least MIN_EDIT_KEPT of the candidate and the editor's own words
+# are at most MAX_EDIT_OWN of the entry. The two cases the external auditor drove
+# at r2: a candidate cut to its first 43% (kept 0.43) is refused; an entry more
+# than half of which the editor appended (own 0.55) is refused; a one-word fix or a
+# short clause added to the whole candidate passes. Set by the PI on 2026-09-13
+# (audit/rag4ds/responses/PI_decision_edit-line_2026-09-13.md); the human still
+# judges the meaning - no lexical line sees a reversed claim (r2 O2).
+MIN_EDIT_KEPT = 0.7
+MAX_EDIT_OWN = 0.5
 QUOTATION_BOUND = ("the entry states the fact in the project's own words; verbatim quotation "
                    "is bounded to a short attributed phrase, never a passage (component 2, NFR5)")
+
+
+def use_utf8_console(stream=None) -> None:
+    """Render to UTF-8 whatever the console's codepage is (AR-rag4ds-049 F4).
+
+    Session 5 of 2026-09-21 aborted after 32 rows when the gate printed a
+    candidate carrying U+FB00 (a PDF's "ff" ligature) to a cp1252 console:
+    the corpus is full of ligatures and Greek letters, and a validator's
+    session must not die on one. Set on the gate's own entry points, not
+    only in the shell wrappers that call them, so the documented direct
+    invocation is protected too. A stream that cannot be reconfigured (a
+    capture object, a pipe already wrapped) is left alone - this hardens
+    the console, it never fails the session - but it SAYS SO on stderr
+    (AR-rag4ds-049 r2 O9): a console left on its locale codec is a session
+    that can still abort on a ligature, and the operator is told."""
+    stream = sys.stdout if stream is None else stream
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is None:
+        print(f"gate: stdout ({type(stream).__name__}) cannot be set to UTF-8; a candidate "
+              f"carrying a ligature may abort this session", file=sys.stderr)
+        return
+    try:
+        reconfigure(encoding="utf-8", errors="backslashreplace")
+    except (ValueError, OSError, UnsupportedOperation) as exc:  # pragma: no cover
+        print(f"gate: stdout refused UTF-8 ({exc}); a candidate carrying a ligature may abort "
+              f"this session", file=sys.stderr)
+
+
 def not_applicable_review() -> dict:
     """A fresh not-applicable review context (fresh lists each call - O12: no
     record may share a mutable object with a module constant)."""
@@ -138,10 +194,26 @@ class GateContext:
     # refused (O14)
     allow_unchecked_approval: bool = False
     journal_ref: str = DECISION_JOURNAL.as_posix()
+    # AR-rag4ds-026 F3: the approver and every recorded author are REGISTERED
+    # identities (identities.yaml); OD-1 compares identities, never spellings
+    identities: IdentityRegistry | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.approver, str) or not self.approver.strip():
             raise GateError("approver (the expert's recorded identity) must be a non-blank string")
+        if self.identities is None:
+            raise GateError("an identity registry is required (identities.yaml): the approver "
+                            "must be a registered identity (AR-rag4ds-026 F3)")
+        try:
+            ident = self.identities.resolve(self.approver)
+        except IdentityError as exc:
+            raise GateError(f"approver refused: {exc}") from exc
+        # F12: a registered identity is not thereby an approver - it must hold a
+        # gating role (the per-candidate check then matches the role to the home)
+        if not any(r in GATING_ROLES for r in ident.roles):
+            raise GateError(f"approver refused: {self.approver!r} holds no gating role "
+                            f"(has {list(ident.roles)}; gating roles are {GATING_ROLES}) - "
+                            f"an authoring identity does not approve (identities.yaml)")
         if not isinstance(self.code_commit, str) or not re.fullmatch(
             r"[0-9a-f]{7,40}", self.code_commit
         ):
@@ -194,10 +266,12 @@ class GateSession:
             raise GateError(f"layer filter {layer!r} is not a layer")
         self.pack, self.layer = pack, layer
         self._t0 = time.monotonic()
+        self.current_cid: str | None = None  # the candidate the pending key prompt decides
         self._skipped: set[str] = set()
         self._no_source: set[str] = set()   # candidates whose span was not rendered (F12)
         self._no_display: set[str] = set()  # candidates shown without a working display
         self.summary = Summary(ctx.approver, ctx.clock(), {"pack": pack, "layer": layer})
+        self._last_span_text: str | None = None
         # one read of each journal; updated as the session writes
         self._cands = ctx.staging.candidates()
         self._states = ctx.staging.states()            # cid -> (state, head)
@@ -242,9 +316,15 @@ class GateSession:
     def repair(self) -> int:
         """Start-of-session repair (6.4 crash contract): a decision whose
         staging transition never landed is applied now, loudly, AND the
-        mechanical cluster close that decision owed is run (F3); a GROUPED
-        member whose head is already decided with no decision of its own
-        is an inconsistency the session refuses to hide."""
+        mechanical cluster close that decision owed is run (F3) - checked
+        against the members' home roles BEFORE the transition is applied, so
+        a refusal leaves the crash state as found (AR-rag4ds-026 r5 F19). A
+        GROUPED member whose head is already decided with no decision of its
+        own (a stranded cluster) is recovered here by an identity holding
+        every member's home role, provided the head's staging authority
+        names the head's own journal decision; otherwise, and for anyone
+        else, it is refused by name - an inconsistency the session never
+        hides (r6 F21)."""
         open_ids = {cid for cid, (st, _) in self._states.items() if st in ("PENDING", "GROUPED")}
         repaired = 0
         if open_ids:
@@ -260,6 +340,11 @@ class GateSession:
                       "reject-duplicate": "REJECTED-DUPLICATE"}.get(rec["type"])
                 if to is None:
                     continue
+                if to in ("APPROVED", "REJECTED"):
+                    # r5 F19: the close this repair owes is checked BEFORE the transition
+                    # is applied, so a refusal leaves the crash state exactly as found -
+                    # repairable by an identity holding every member's home role
+                    self._check_members_home(cid)
                 self._transition(cid, to, ref)
                 self.console.print(_plain(f"REPAIRED {cid}: decision {ref} had no staging "
                                           f"transition; applied -> {to}"), style="bold red")
@@ -267,14 +352,39 @@ class GateSession:
                 repaired += 1
                 if to in ("APPROVED", "REJECTED"):
                     repaired += self._close_members(cid, ref, repairing=True)
-        for cid, (st, head) in self._states.items():
-            if st == "GROUPED" and head is not None:
-                hstate = self._states.get(head, ("?", None))[0]
-                if hstate in ("APPROVED", "REJECTED", "REJECTED-DUPLICATE"):
-                    raise GateError(
-                        f"stranded member {cid}: head {head} is {hstate} but the member is still "
-                        "GROUPED with no decision - the journal and staging disagree"
-                    )
+        stranded_heads = sorted({head for cid, (st, head) in self._states.items()
+                                 if st == "GROUPED" and head is not None
+                                 and self._states.get(head, ("?", None))[0]
+                                 in ("APPROVED", "REJECTED", "REJECTED-DUPLICATE")})
+        for head in stranded_heads:
+            # r5 F19/O25: a head decided with its cluster still open is the state a
+            # refused close (or a crash inside the close) leaves behind; it is
+            # recovered here by an identity holding every member's home role -
+            # _close_members refuses anyone else by name - never hidden, never fatal
+            hstate = self._states[head][0]
+            try:
+                head_ref = self.ctx.staging.head_decision_of(head)
+            except StagingError as exc:
+                raise GateError(f"stranded member(s) of head {head} ({hstate}): {exc}") from exc
+            if hstate == "REJECTED-DUPLICATE":
+                raise GateError(
+                    f"stranded member(s) under head {head}, itself REJECTED-DUPLICATE: a member "
+                    f"of a member - the journal and staging disagree")
+            # the head's cited decision must exist and be the head's own: a forged or
+            # dangling authority is the inconsistency the crash contract refuses to hide
+            n = self._decision_index(head_ref)
+            in_range = n is not None and 0 < n <= len(self._decisions)
+            cited = self._decisions[n - 1] if in_range else None
+            if cited is None or cited.get("candidate_id") != head:
+                raise GateError(
+                    f"stranded member(s) of head {head} ({hstate}): its staging authority "
+                    f"{head_ref!r} does not name a journal decision for {head} - the journal and "
+                    f"staging disagree")
+            self._check_members_home(head)  # r6 O27: allowed before it is announced
+            self.console.print(_plain(f"REPAIR: head {head} is {hstate} with GROUPED members "
+                                      f"and no close; closing them now citing {head_ref}"),
+                               style="bold red")
+            repaired += self._close_members(head, head_ref, repairing=True)
         self.summary.repaired = repaired
         return repaired
 
@@ -357,6 +467,8 @@ class GateSession:
             t.add_row("draft", _plain(c["yaml_draft"]))
         self.console.print(Panel(t, title="candidate"))
         span_state, span_text = self._source_span(cid, c)
+        # the rendered passage is what an edit is checked against (AR-rag4ds-027 F2)
+        self._last_span_text = span_text if span_state == "rendered" else None
         style = "bold red" if span_state in ("unavailable", "invalid") else None
         self.console.print(Panel(_plain(span_text), title="source span (local corpus copy)",
                                  style=style or ""))
@@ -388,6 +500,10 @@ class GateSession:
             "conflicts": list(conflicts),
             "source_span": span_state,
             "quotation_bound_confirmed": quotation_confirmed,
+            # AR-rag4ds-026 F5: the record itself names the index and model pin
+            # behind its conflict display (None when there was no finder)
+            "display_provenance": (dict(self.ctx.display_provenance)
+                                   if self.ctx.related_finder is not None else None),
         }
 
     def _count_evidence(self, span_state: str, display: str) -> None:
@@ -399,6 +515,10 @@ class GateSession:
     def _decide_entry(self, cid: str, c: dict, kind: str, span_state: str, display: str,
                       related: list[dict]) -> None:
         p = c["proposed"]
+        # OD-1 (PI decision 2026-09-12): an entry authored by the approver is gated
+        # by the alternate - the author is just another proposer (plan section 3)
+        self._refuse_self_approval(cid, c)
+        self._check_members_home(cid)  # r4 F18: the close this decision owes
         if span_state == "invalid":
             raise GateError(
                 "approval refused: the source span is INVALID (the local document contradicts "
@@ -419,10 +539,12 @@ class GateSession:
                 "with allow_unchecked_approval, which is recorded"
             )
         content = p["content"]
+        edit: dict | None = None
         if kind == "edit-then-approve":
             content = self.read("edited content: ").strip()
             if not content:
                 raise GateError("edit-then-approve needs the edited content")
+            edit = self._check_edit(p["content"], content, span_state)
         self.console.print(Panel(_plain(QUOTATION_BOUND), title="quotation bound (component 2)"))
         if self.read("the content honors the quotation bound? [y/N]: ").strip().lower() != "y":
             raise GateError("approval refused: the quotation bound was not confirmed")
@@ -442,13 +564,30 @@ class GateSession:
         if sup:
             if sup != entry_id:
                 raise GateError("a supersession keeps the existing id: type the same id")
+            # AR-rag4ds-051 O2: the entry being superseded is replaced, not kept beside
+            # the new version, so it cannot be a coexisting conflict of it
+            if entry_id in conflicts:
+                raise GateError(f"{entry_id!r} is the entry this approval supersedes, not a "
+                                f"conflict that coexists with it; leave it out of the "
+                                f"related-entries answer")
             cur = self._versions.get(entry_id.lower())
             if cur is None:
                 raise GateError(f"supersession target {entry_id!r} is not a current entry")
+            # r4 F18: a supersession keeps the entry's HOME - moving an entry between
+            # the shared trees and a pack would let a pack validator displace a
+            # shared-layer entry; retract it in its home and file anew instead
+            prev = self._current_entry(entry_id)
+            if prev is not None and prev.get("pack") != c["pack"]:
+                raise GateError(
+                    f"supersession refused: {entry_id!r} lives in {_home_name(prev.get('pack'))} "
+                    f"and the candidate is for {_home_name(c['pack'])} - a supersession keeps "
+                    f"the entry's home; retract it there and file anew")
             version, supersedes = cur + 1, {"id": entry_id, "version": cur}
         else:
             version, supersedes = 1, None
         review = self._review(display, related, conflicts, span_state, True)
+        if edit is not None:
+            review["edit"] = edit
         try:
             entry = Entry(id=entry_id, type=p["type"], layer=c["layer"], pack=c["pack"],
                           content=content, source_reference=p["source_reference"],
@@ -469,7 +608,114 @@ class GateSession:
         self.console.print(_plain(f"{kind} {entry_id} v{version} -> {ref}"), style="green")
         self._close_members(cid, ref)
 
+    def _check_edit(self, original: str, edited: str, span_state: str) -> dict:
+        """AR-rag4ds-027 F2/F7: an edit is an edit, not an authoring road. The
+        edited text must keep at least MIN_EDIT_KEPT of the candidate's
+        characters (matched / len(candidate)) and the editor's own characters
+        must be at most MAX_EDIT_OWN of the entry (1 - matched / len(edited)) -
+        beyond either it is a rewrite and is filed as a candidate under the
+        editor's name; it must pass the mechanical quotation bound against
+        the rendered passage and cover it like any candidate; and the edit is
+        recorded on the decision (who, kept, own, the longest verbatim source
+        run). The two shares are the record's meaning of the line; the human
+        judges the meaning of the words."""
+        kept, own = edit_shares(original, edited)
+        if kept < MIN_EDIT_KEPT:
+            raise GateError(
+                f"edit refused: the edited text keeps only {kept:.0%} of the candidate's "
+                f"characters (minimum {MIN_EDIT_KEPT:.0%}) - that is a rewrite, not an edit; file "
+                f"it as a candidate under your own name and let the gate decide it")
+        if own > MAX_EDIT_OWN:
+            raise GateError(
+                f"edit refused: {own:.0%} of the edited text is the editor's own (maximum "
+                f"{MAX_EDIT_OWN:.0%}) - that is authoring, not editing; file it as a candidate "
+                f"under your own name and let the gate decide it")
+        if span_state != "rendered" or self._last_span_text is None:
+            raise GateError("edit refused: the source passage is not rendered, so the edited "
+                            "content cannot be checked against it; approve or reject as filed")
+        check = quotation_bound_check(edited, self._last_span_text)
+        if not check["ok"]:
+            raise GateError(f"edit refused: the edited content fails the quotation bound against "
+                            f"the passage - {check['reason']}")
+        cov = passage_coverage(edited, self._last_span_text)
+        if cov < MIN_PASSAGE_COVERAGE:
+            raise GateError(f"edit refused: the passage supports only {cov:.0%} of the edited "
+                            f"content's words (minimum {MIN_PASSAGE_COVERAGE:.0%})")
+        return {"editor": self.ctx.approver, "kept": round(kept, 3), "own": round(own, 3),
+                "source_run": int(check["source_run"])}
+
+    def _refuse_self_approval(self, cid: str, c: dict) -> None:
+        """OD-1 (PI decision 2026-09-12) and the gating roles (AR-rag4ds-026
+        F12), enforced per candidate against REGISTERED identities:
+        - the approver must hold the gating role the candidate's home
+          requires: od1-designee or od1-alternate for the shared layers,
+          validator for a pack;
+        - a candidate authored by the approver is refused (the author is
+          just another proposer - plan section 3);
+        - a candidate authored by the OD-1 designee is approved by the
+          od1-alternate and nobody else;
+        - an author the registry does not know is refused by name (F3)."""
+        registry = self.ctx.identities
+        approver = self._check_home_role(c.get("pack"), "approval")
+        shared = c.get("pack") == SHARED_PACK
+        if c.get("kind") == "mapping-draft":
+            author = c.get("author")  # a mapping draft names its author directly
+        else:
+            extractor = c.get("extractor") or ""
+            author = author_of(extractor)
+            # AR-rag4ds-027 F3: a candidate that names an author in any other spelling of
+            # the prefix is refused, never read as machine-proposed (staging refuses it too)
+            if author is None and extractor.strip().casefold().startswith("author"):
+                raise GateError(f"approval refused: candidate {cid} carries a malformed author "
+                                f"extractor {extractor!r}; an author is written 'author:<name>' "
+                                f"exactly")
+        if author is None:
+            return
+        try:
+            author_id = registry.resolve(author)
+        except IdentityError as exc:
+            raise GateError(f"approval refused: candidate {cid} names an author the identity "
+                            f"registry does not know - {exc}") from exc
+        if author_id.id == approver.id:
+            who = "the alternate" if shared else "another validator"
+            raise GateError(
+                f"approval refused: candidate {cid} was authored by the approver "
+                f"({author!r}); the author is just another proposer - skip it and let "
+                f"{who} decide it{' (OD-1)' if shared else ''}"
+            )
+        # AR-rag4ds-026 r3 F15: the designee-needs-alternate arm is OD-1's, and OD-1
+        # speaks of the shared layers; a pack candidate the designee authored is
+        # gated by any validator who is not its author
+        if shared and "od1-designee" in author_id.roles and "od1-alternate" not in approver.roles:
+            raise GateError(
+                f"approval refused: candidate {cid} was authored by the OD-1 designee "
+                f"({author!r}) and only the alternate gates it (OD-1); "
+                f"{self.ctx.approver!r} is not the alternate - skip it")
+
+    def _check_home_role(self, pack: str | None, what: str):
+        """The approver must hold the gating role of the candidate's or
+        entry's home: od1-designee or od1-alternate for the shared layers, a
+        validator for a pack (AR-rag4ds-026 F12; on every write path that
+        disposes of knowledge - approval, rejection, retraction - r3 F16).
+        Returns the approver's identity."""
+        approver = self.ctx.identities.resolve(self.ctx.approver)
+        shared = pack == SHARED_PACK
+        needed = ("od1-designee", "od1-alternate") if shared else ("validator",)
+        if not any(r in approver.roles for r in needed):
+            raise GateError(
+                f"{what} refused: approver {self.ctx.approver!r} holds no gating role for "
+                f"{'the shared layers' if shared else 'pack ' + repr(pack)} "
+                f"(needs one of {needed}; has {list(approver.roles)}) - identities.yaml")
+        # S9 (AR-rag4ds-026 O17/O22): the validator role is scoped to its pack(s)
+        if not shared and not approver.validates(pack):
+            raise GateError(
+                f"{what} refused: approver {self.ctx.approver!r} validates "
+                f"{list(approver.packs)}, not pack {pack!r} - identities.yaml")
+        return approver
+
     def _decide_mapping(self, cid: str, c: dict, kind: str) -> None:
+        self._refuse_self_approval(cid, c)  # AR-rag4ds-026 O6: the rule covers every kind
+        self._check_members_home(cid)  # r5 F19: before the write, like an entry head
         try:
             artifact = yaml.safe_load(c["yaml_draft"])
         except yaml.YAMLError as exc:
@@ -490,7 +736,9 @@ class GateSession:
 
     def _reject(self, cid: str, c: dict, span_state: str, display: str,
                 related: list[dict]) -> None:
-        reason = self.read("reason: ").strip()
+        self._check_home_role(c.get("pack"), "rejection")  # r3 F16
+        self._check_members_home(cid)  # r4 F18: the close this decision owes
+        reason = self.read(REASON_PROMPT).strip()
         text = c["proposed"]["content"] if c["kind"] == "entry" else c["yaml_draft"]
         src = c["proposed"]["source_reference"] if c["kind"] == "entry" else f"staging:{cid}"
         review = self._review(display, related, [], span_state, False)
@@ -515,6 +763,7 @@ class GateSession:
         members = self._members_of(head)
         if not members:
             return 0
+        self._check_members_home(head)  # r4 F18 (also on crash repair)
         for m in members:
             mc = self._cands[m]["candidate"]
             text = mc["proposed"]["content"] if mc["kind"] == "entry" else mc["yaml_draft"]
@@ -533,8 +782,38 @@ class GateSession:
                            style="yellow")
         return len(closed)
 
+    def _decision_index(self, ref: str | None) -> int | None:
+        """The 1-based journal line a decision reference names, or None."""
+        if not isinstance(ref, str) or not ref.startswith(self.ctx.journal_ref + ":"):
+            return None
+        tail = ref[len(self.ctx.journal_ref) + 1:]
+        return int(tail) if tail.isdigit() else None
+
+    def _check_members_home(self, head: str) -> None:
+        """r4 F18: a head decision mechanically closes every GROUPED member
+        with a reject-duplicate decision the approver signs, so the approver
+        must hold the gating role of each member's own home - checked
+        BEFORE the head decision is written, so a refusal leaves no head
+        decided with its cluster open. A mixed cluster can only be a legacy
+        one: _group refuses to build it."""
+        for m in self._members_of(head):
+            mc = self._cands[m]["candidate"]
+            self._check_home_role(mc.get("pack"), f"the mechanical close of member {m}")
+
     def _group(self, cid: str) -> None:
-        head = self.read("head candidate id: ").strip()
+        head = self.read(HEAD_PROMPT).strip()
+        c = self._cands[cid]["candidate"]
+        # r4 F18: grouping is what makes the cluster path reach a candidate, so
+        # it takes the member's home role; and a duplicate lives in the same
+        # home as its head - a cross-home cluster would let one home's approver
+        # dispose of another home's candidate through the head's decision
+        self._check_home_role(c.get("pack"), "grouping")
+        head_rec = self._cands.get(head)
+        if head_rec is not None and head_rec["candidate"].get("pack") != c.get("pack"):
+            raise GateError(
+                f"grouping refused: {cid} (home {c.get('pack')!r}) and head {head} (home "
+                f"{head_rec['candidate'].get('pack')!r}) live in different homes; a duplicate "
+                f"is a duplicate within one tree")
         try:
             self._transition(cid, "GROUPED", f"gate:{self.ctx.approver}:grouped-under:{head}",
                              head=head)
@@ -555,6 +834,7 @@ class GateSession:
         if cur_form["id"] != entry_id:
             raise GateError(f"type the entry id exactly as recorded: {cur_form['id']!r} "
                             f"(ids are case-insensitively unique; {entry_id!r} names it)")
+        self._check_home_role(cur_form.get("pack"), "retraction")  # r3 F16: the fold deletes
         final = Entry(**dict(cur_form, status="retracted"))
         try:
             record = retract(self.ctx.approver, self.ctx.clock(), entry_id, final.version, final,
@@ -591,7 +871,12 @@ class GateSession:
                     self._skipped.add(cid)
                     self.console.print(_plain(f"UNRENDERABLE {cid}: {exc}"), style="bold red")
                     continue
-                key = self.read("[a]pprove [e]dit-then-approve [r]eject [g]roup [s]kip [q]uit: ")
+                # AR-rag4ds-032 F1: the candidate the next key decides, exposed so a
+                # scripted reader (tools/gate_sheet.py) can refuse to answer for any
+                # other - the loop's continue arms (unrenderable, refused) re-show or
+                # skip a candidate without consuming a key
+                self.current_cid = cid
+                key = self.read(KEY_PROMPT)
                 key = key.strip().lower()[:1]
                 if key not in KEYS:
                     self.console.print(_plain(f"unknown key {key!r}"))
@@ -675,6 +960,26 @@ class GateSession:
 # ----- wiring helpers -----
 
 
+def edit_shares(original: str, edited: str) -> tuple[float, float]:
+    """(kept, own): the share of the candidate's characters that survive in
+    the edited text, and the share of the edited text that is not the
+    candidate's - both from difflib's matching blocks, so a pasted clause
+    and a deletion are each visible."""
+    # autojunk=False (AR-rag4ds-027 r3 F7): the default drops frequent characters
+    # from matching in any text of 200 characters or more, so a five-word change in
+    # a 499-character candidate scored kept 0.56 - a rewrite - where the true share
+    # is 0.95; the shares must be the ones the record and the PI's decision state
+    matcher = difflib.SequenceMatcher(None, original, edited, autojunk=False)
+    matched = sum(b.size for b in matcher.get_matching_blocks())
+    kept = matched / len(original) if original else 0.0
+    own = 1.0 - (matched / len(edited) if edited else 1.0)
+    return kept, max(0.0, own)
+
+
+def _home_name(pack: str | None) -> str:
+    return "the shared layers" if pack == SHARED_PACK else f"pack {pack!r}"
+
+
 def make_source_resolver(runs_journal: Journal, data_dir: Path) -> Callable[[str], Path | None]:
     """source_hash -> local raw document path, via the ingest manifests in
     the runs journal (corpus.ingest wrote them); the gate re-hashes on read."""
@@ -707,13 +1012,37 @@ def make_related_finder(retriever, top_k: int = 5) -> Callable[[str, str, str], 
 
 def display_provenance_of(retriever) -> dict:
     m = retriever.index.manifest
+    # entry_count (AR-rag4ds-026 O3): a record can say the display was consulted
+    # over an empty index, which is indistinguishable from a clean check otherwise
     return {"index_version": m["index_version"], "embedding_model": dict(m["embedding_model"]),
-            "min_relevance": m["min_relevance"]}
+            "min_relevance": m["min_relevance"], "entry_count": m["entry_count"]}
+
+
+def transcript_path_is_publishable(path: Path) -> str | None:
+    """A transcript renders source passages, so it may never land where git
+    would commit it (AR-rag4ds-026 F1: the S8 transcript carried 626
+    characters of a non-redistributable document into the tree). Returns the
+    reason a path is refused, or None when git ignores it or it lies outside
+    any work tree."""
+    import subprocess
+
+    path = Path(path).resolve()
+    probe = subprocess.run(["git", "check-ignore", "-q", "--", str(path)], cwd=str(path.parent),
+                           capture_output=True, text=True)
+    if probe.returncode == 0:
+        return None
+    if probe.returncode == 128 and "not a git repository" in probe.stderr:
+        return None
+    if probe.returncode == 1:
+        return (f"transcript path {path} is inside a git work tree and not ignored - it would "
+                f"be committed; write it under a gitignored directory such as data/transcripts/")
+    return f"git check-ignore failed for {path} (exit {probe.returncode}): {probe.stderr.strip()}"
 
 
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
+    use_utf8_console()  # AR-rag4ds-049 F4: before anything is rendered
     ap = argparse.ArgumentParser(description="rag4ds expert gate (plan 6.4, D-1)")
     ap.add_argument("--module-root", required=True)
     ap.add_argument("--approver", required=True)
@@ -732,6 +1061,18 @@ def main(argv: list[str] | None = None) -> int:
         print("gate: this machine's local clock is not JST (UTC+9); refusing", file=sys.stderr)
         return 1
     root = Path(args.module_root)
+    if args.transcript:
+        Path(args.transcript).parent.mkdir(parents=True, exist_ok=True)
+        refused = transcript_path_is_publishable(Path(args.transcript))
+        if refused:
+            print(f"gate: {refused}", file=sys.stderr)
+            return 1
+    try:
+        identities = IdentityRegistry.load(root / IDENTITIES_FILE)
+        identities.resolve(args.approver)
+    except IdentityError as exc:
+        print(f"gate: refused - {exc}", file=sys.stderr)
+        return 1
     from rag4ds.index.build import SentenceTransformerEmbedder, load_index
     from rag4ds.retrieve.service import Retriever
 
@@ -748,9 +1089,11 @@ def main(argv: list[str] | None = None) -> int:
         related_finder=make_related_finder(retriever),
         display_provenance=display_provenance_of(retriever),
         allow_unchecked_approval=args.allow_unchecked_approval,
+        identities=identities,
     )
     console = Console(record=True, markup=False, highlight=False)
-    session = GateSession(ctx, console, input, pack=args.pack, layer=args.layer)
+    session = GateSession(ctx, console, make_echo_reader(console, input), pack=args.pack,
+                          layer=args.layer)
     rc = 0
     try:
         if args.retract:
@@ -767,6 +1110,18 @@ def main(argv: list[str] | None = None) -> int:
             rc = write_transcript(console, Path(args.transcript),
                                   session_failed=sys.exc_info()[0] is not None)
     return rc
+
+
+def make_echo_reader(console: Console, read: Callable[[str], str]) -> Callable[[str], str]:
+    """The live gate's read callback: what is typed at every prompt (keys,
+    reasons, edited text, ids) is echoed into the recorded console, so the
+    transcript witnesses the input and not only the outcome (AR-rag4ds-033
+    r1 O1; AR-rag4ds-034 F4)."""
+    def read_and_echo(prompt: str) -> str:
+        answer = read(prompt)
+        console.print(_plain(f"{prompt}{answer}"))
+        return answer
+    return read_and_echo
 
 
 def write_transcript(console: Console, path: Path, session_failed: bool) -> int:
@@ -790,5 +1145,5 @@ __all__ = [
     "GateContext", "GateError", "GateSession", "Summary", "QUOTATION_BOUND",
     "not_applicable_review", "jst_now", "suggest_id", "make_source_resolver",
     "make_related_finder", "display_provenance_of", "write_transcript", "main",
-    "_timestamp_valid",
+    "transcript_path_is_publishable", "_timestamp_valid", "use_utf8_console",
 ]

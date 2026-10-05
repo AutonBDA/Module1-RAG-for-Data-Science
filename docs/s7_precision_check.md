@@ -1,7 +1,7 @@
 # S7 precision sanity check (plan 10.1) - the recorded number and its run manifest
 
 Produced by tests/test_s7_extraction.py::test_precision_measured_and_recorded_no_threshold,
-regenerated from a clean working tree at git HEAD 0a419d3 (AR-rag4ds-022 F8: the S7 exit criterion
+regenerated from a clean working tree at git HEAD 62c4d6c (AR-rag4ds-022 F8: the S7 exit criterion
 asks for the number to be RECORDED, so it lives here and not only in a deleted pytest tmpdir).
 The code_commit inside the record is read from git at run time, so it names the code that
 produced these figures (F11) - it is this same HEAD, and the commit filing this document is the
@@ -17,6 +17,13 @@ are proposed and none is suppressed, so the new ceiling bounds copying without r
 of the work the rule strategy legitimately does (the longest verbatim run any of the four
 reaches is 45 source characters, against the ceiling of 64).
 
+REGENERATED for VT-3b (the spaCy language model pin). The run manifest's rule-strategy `sentencizer`
+parameter string changed - it no longer claims that no language model is pinned - so `extraction_id`
+and the `run_manifest_ref` derived from it differ from the record filed at the previous pin. The
+measured figures did not move: the same four candidates are proposed and none is suppressed. The
+rule strategy still splits with the blank sentencizer; the pinned model (en_core_web_sm 3.8.0,
+hash-verified at load) is not used here, by the measurement recorded in docs/vt3_pins.md.
+
 NO THRESHOLD IS CLAIMED. The plan defers the extraction-precision target to S9, where it is set
 with the validator against real corpus intake; this number is a sanity check of the rule strategy
 against a SYNTHETIC six-sentence corpus written for the test, and is not an estimate of field
@@ -31,10 +38,10 @@ precision. The oracle is the gold definienda listed below.
   "candidates_suppressed_for_bound": 0,
   "clustering_embedder": null,
   "clusters": [],
-  "code_commit": "0a419d3",
+  "code_commit": "62c4d6c",
   "config": {},
   "corpus": "synthetic",
-  "extraction_id": "3bc2d451445cfc66",
+  "extraction_id": "5f0a56a4b96fc5c4",
   "kind": "extraction",
   "layer": "domain",
   "min_tokenisable_fraction": 0.5,
@@ -50,7 +57,7 @@ precision. The oracle is the gold definienda listed below.
   "quotation_max_cjk_chars": 8,
   "quotation_max_source_chars": 64,
   "quotation_max_words": 8,
-  "run_manifest_ref": "runs/extraction.jsonl#3bc2d451445cfc66",
+  "run_manifest_ref": "runs/extraction.jsonl#5f0a56a4b96fc5c4",
   "schema": 1,
   "source_hash": "964d382539a13a326fa4063eb685c1caf599fd48c5cb144a75941ebb1b47a095",
   "strategies": [
@@ -62,7 +69,7 @@ precision. The oracle is the gold definienda listed below.
      "gloss_words": 6,
      "headings": true,
      "max_cell_words": 5,
-     "sentencizer": "spacy.blank('en') + sentencizer (no language model pinned at VT-3)",
+     "sentencizer": "spacy.blank('en') + sentencizer (the VT-3b language model is pinned but not used for splitting, by measurement)",
      "tables": true
     }
    }

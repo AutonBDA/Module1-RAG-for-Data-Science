@@ -54,7 +54,7 @@ def test_serialization_is_deterministic_regardless_of_field_order():
 
 
 def test_canonical_form_properties():
-    raw = canonical_bytes(make_entry(content="café forecasting rules"))
+    raw = canonical_bytes(make_entry(content="caf\u00e9 forecasting rules"))
     assert raw.endswith(b"\n") and not raw.endswith(b"\n\n")
     assert b"\r" not in raw
     raw.decode("ascii")  # ASCII-escaped: must not raise
@@ -130,7 +130,7 @@ def test_unknown_field_is_rejected_by_name():
         "under_score",
         "space id",
         "a" * 65,
-        "café",
+        "caf\u00e9",
         "dot.json",
         "trailing-newline\n",
         "a" * 64 + "\n",

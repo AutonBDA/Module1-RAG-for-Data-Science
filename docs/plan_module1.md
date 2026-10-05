@@ -42,7 +42,7 @@ AR-rag4ds-002 (its r4 coverage reads "sections 5-8 in full" - the internal
 review rounds cited above verified nothing; the AR did), 9 by
 AR-rag4ds-003, 10 by AR-rag4ds-004 plus external AR-rag4ds-005, 11 by
 AR-rag4ds-006; the amendment history above stands as written; section
-12's VT-3 marked DISCHARGED 2026-08-21 at S0 (docs/vt3_pins.md), flagged; section 12 records D-1, OD-1..OD-4, VT-1..VT-3. Written from scratch; the July plan
+12's VT-3 marked DISCHARGED 2026-08-21 at S0 (docs/vt3_pins.md), flagged, and RE-OPENED then DISCHARGED again 2026-09-11 for the language model (VT-3b, docs/vt3_pins.md), flagged; section 12 records D-1, OD-1..OD-4, VT-1..VT-3; OD-1 DECIDED 2026-09-12 (PI), flagged; VT-1 DISCHARGED 2026-09-20 at S9d (packs/robotics/standards.yaml; docs/s9_robotics_pack.md section 15), flagged; 6.4 AMENDED 2026-09-24 at S9e part 8 for certified-text approvals from a PI-signed file (PI decision, authoring/robotics_s9e_part8_PI_review_2_signed.txt), flagged. Written from scratch; the July plan
 (AutoAI_Cluster/z_module_2_plan.md) is reference material only. No deadline shapes this
 document; scope is the whole module.
 
@@ -199,6 +199,13 @@ Non-functional requirements.
 - NFR5 Openness (carries C8): Apache-2.0; the repository is publishable at any
   moment: no secrets, no personal data, no restricted-license corpus content in
   git. Claims may be carried by NFRs as well as FRs; C8 is the one that is.
+  Standing rule (PI decision 2026-09-13, flagged post-certification;
+  audit/rag4ds/responses/PI_decision_history_2026-09-13.md): "in git" is the
+  tracked tree at a release; this repository's HISTORY is never published or
+  transferred, and a release is an export of the AutonBDA/ subtree at a tagged
+  commit - never a push, mirror or fork of the repository. Twelve commits of
+  2026-09-12 carry six sentences of a restricted document (AR-rag4ds-026 F1,
+  AR-rag4ds-027 F5) and are not rewritten.
 - NFR6 Corpus licensing: git stores the corpus catalog only (content hash, license,
   fetch pointer, and metadata per document). Raw documents live outside git in a local
   data directory; a document is vendored into the repository only when its license
@@ -349,11 +356,25 @@ enter staging as candidates - the author is just another proposer - and pass the
 expert gate. Invariant I2 has no exception. Their source reference (FR1) cites the
 authoritative text they restate (for CRISP-DM, its published process guide) or, for
 original knowledge, names the author as the source.
+Mechanically (S8, flagged amendment 2026-09-12): the text restated is a catalogued
+document of the shared corpus (9.1), the candidate spans the passage it restates
+(made mechanical at AR-rag4ds-027 r1, 2026-09-13, flagged: an anchor locates its
+whole paragraph and a locator whose text supports under half of the content's
+words is refused as a fragment - the S8 spans were sentence-long locator
+extents until then), and the quotation bound is checked against that passage
+at filing - so a hand-
+authored candidate carries the same evidence an extracted one does; original
+knowledge is a team-authored source note, catalogued the same way, whose author is
+named in the source reference.
 
 Gate ownership: each domain pack is gated by its domain validator (robotics:
-currently K. Naruse). The general and task layers are gated by a designated data
-science expert from the team, recorded per gate decision; who that designee is
-stays an open decision (section 12, OD-1).
+currently K. Naruse; T. A. Siriweera is registered as a second robotics
+validator, PI decision 2026-10-05, flagged post-certification - each decision
+records its approver, so the records say which robotics approvals are his,
+and nobody approves a candidate they authored). The general and task layers are gated by a designated data
+science expert from the team, recorded per gate decision; the designee is
+T. A. Siriweera with I. Paik as alternate, the alternate gating any entry the
+designee authored (OD-1, decided 2026-09-12, flagged post-certification).
 
 Design invariants (the rules everything above obeys):
 
@@ -509,6 +530,21 @@ For robotics the target is the CORA ontology family of IEEE 1872, per C7 and FR1
 [UNVERIFIED] The concrete class list to map against must be verified against the
 actual IEEE 1872 text before the robotics pack's first release; recorded as VT-1 in
 section 12 (the proposal-side C7 note tracks the same dependency).
+VT-1 DISCHARGED 2026-09-20 at S9d, flagged: the class list was verified against
+the text of IEEE Std 1872-2015 (the PI's own copy, pinned by sha256 in the pack,
+kept outside git) and is recorded as pack DATA in packs/robotics/standards.yaml -
+the classes by clause under their sub-ontology prefix (corax, cora, rparts, pos),
+and separately every relation the same clauses declare, by a subrelation axiom or
+by an axiom typing the term as a relation, predicate or function (the 7.2 part
+role and the 7.4 autonomy roles are relations in the text, not classes), so that a
+mapping row can name only a verified class; the verification itself is
+docs/s9_robotics_pack.md section 15 (the relation list completed to all 42 after
+AR-rag4ds-042 r1 F1, flagged). IEEE Std 1872.2-2021 (the AuR ontology) is
+registered beside it as the extension reference. The draft road is
+tools/file_mapping_draft.py (generic; the pack is data): it refuses a row naming
+an unverified class, a relation, or an entry the tree does not hold, and files
+the draft's bytes verbatim as the mapping-draft candidate this section's gate
+path decides.
 
 ### 4.6 How DM, ML, and DL requirements map to the task-pattern layer
 
@@ -578,7 +614,9 @@ hours they cost are estimated in section 10.
   published robotics-maintenance literature where licenses permit catalog entry
   (NFR6). [ASSUMED] the validator corpus arrives in usable text form; the intake
   path is the ordinary one (catalog, hash, license per document).
-- Validator: the designated robotics expert (currently K. Naruse).
+- Validator: the designated robotics expert (currently K. Naruse), with
+  T. A. Siriweera as a second robotics validator from 2026-10-05 (PI decision,
+  flagged post-certification; section 3, gate ownership).
 - Depth: DEEP. Robotics is the first pack and forges the core alongside the
   contract (4.7); it also carries the CORA mapping obligation (FR11, VT-1).
 - Demo flow (expected outcomes bound at gating time, per FR9): (1) "which torque
@@ -710,11 +748,37 @@ A gate session: the expert starts the tool under their recorded identity
 and for each candidate sees the proposed entry beside its rendered source span
 from the local corpus copy. Decisions are keyboard-driven; each decision is
 appended to the audit log atomically before the next candidate is shown - a
-crashed session loses at most the in-flight decision and corrupts nothing. The
+crashed session loses at most the in-flight decision and corrupts nothing.
+Crash contract as amended (S8, AR-rag4ds-026 r5-r7, 2026-09-13, flagged): the
+start-of-session repair applies a decision whose staging transition never
+landed only after checking the approver holds every grouped member's home
+role; a head found decided with its cluster still open is closed by such an
+identity when the head's staging authority names its own journal decision,
+and refused by name otherwise - never hidden, never fatal for everyone. The
 session ends with a written summary (counts by decision, time spent), which
 feeds the section 10 estimates. Throughput planning figure [ASSUMED]: order of
 tens of decisions per expert-hour, to be replaced by measured numbers from the
 first robotics sessions.
+First measurement (S8, 2026-09-12, flagged): 64.7 decisions per designee-hour on
+hand-authored shared-layer candidates with an empty conflict display - an upper
+bound for the robotics figure, not its estimate.
+Certified-text approvals (S9e part 8, PI decision 2026-09-24, flagged;
+authoring/robotics_s9e_part8_PI_review_2_signed.txt): a second road beside the
+screen, for one case only. A hand-authored candidate whose exact text the pack's
+validator certified as written in a confirm list pinned in git may be approved
+from an approvals file the PI signed, through tools/gate_certified.py, which
+drives the same gate session and refuses before any decision - in its dry run
+and its live run alike - unless the tool runs from its own tree at the
+recorded HEAD with its code committed; the three files are committed; the
+certified item bears exactly one as-written mark and the list is signed by the
+approver; the candidate came from an authoring run and its text is
+byte-equal to the draft item, itself the certified text with the list's line
+wraps joined; its source passage still hashes to the draft's span; and every
+row's supersession or new id agrees with the journal (amended at AR-rag4ds-053
+r1, flagged). The approval is recorded under the validator; the road and the
+three files' hashes go to runs/gate-certified.jsonl, with a required
+transcript; no conflict can be recorded this way. Extraction proposals and edits are never approved from a file: for them the
+expert at the rendered span stays the rule.
 
 When a candidate touches ground an approved entry already covers, the gate shows
 the related existing entries beside it: contradictions and overlaps are resolved
@@ -916,7 +980,11 @@ Library names below are stable, widely used tools known to the team
   existing hardware (NFR4). The library's license and the model's own license
   are both settled at VT-3, like every license in this section - model
   licenses in particular vary and are not assumed here.
-- Extraction: spaCy for the rule and pattern strategies; the embedding model
+- Extraction: spaCy for the rule and pattern strategies (its language model
+  pinned at VT-3b, 2026-09-11, flagged: en_core_web_sm 3.8.0, MIT,
+  hash-verified at load; S7's rule strategy keeps the blank sentencizer by
+  measurement, and the model serves the POS/dependency and relation-type
+  work of the next extraction increment); the embedding model
   above for similarity clustering and near-duplicate grouping (6.2). The
   LLM-assisted strategy stays deferred (6.2); if it ever calls an external
   model, it uses the provider's own SDK directly - litellm is banned in this
@@ -969,6 +1037,13 @@ changes them.
     shared/general/     the general-concept entry tree; shared/tasks/ the
     shared/tasks/       task-pattern tree - same canonical entry form as
                         packs, gated by the OD-1 designee, never in a pack
+    shared/corpus/      the shared corpus catalog (S8, flagged amendment
+                        2026-09-12): the authoritative texts the general and
+                        task layers restate - the CRISP-DM guide, the team's
+                        task-pattern source note - catalogued under the same
+                        NFR6 rules as a pack's corpus/; raw copies in data/,
+                        except the team's own Apache-2.0 source notes, which
+                        are versioned under authoring/sources/
     journal/            THE append-only audit log data: gate decisions,
                         lifecycle events, JSON Lines (section 8); committed
                         (src/rag4ds/auditlog/ is the code that writes it)
@@ -983,7 +1058,7 @@ changes them.
                         the NFR3 lexicon scan as a test
     tools/              committed evidence and maintenance scripts
     data/               raw corpus documents - gitignored (NFR6); catalog
-                        lives in packs/<code>/corpus/
+                        lives in packs/<code>/corpus/ (or shared/corpus/)
     pyproject + lockfile  pins recorded at VT-3
 
 One clarification this layout forces, closing observation O8 of
@@ -1095,9 +1170,19 @@ seeing results.
   patterns; the designee's measured hours recorded, replacing the
   shared-layer [ASSUMED] figure. (The NFR3 scan first bites at S9, when a
   real pack lexicon exists - it is listed there.)
+  DONE 2026-09-12 (flagged post-certification): shared/general holds 12 and
+  shared/tasks 5 gated entries; the designee's session measured 0.53 h for
+  34 decisions (64.7 per hour); docs/s8_shared_layers.md is the record;
+  submitted as AR-rag4ds-026 (its verdict is on the ledger, not here -
+  AR-rag4ds-026 O8: this line once said "audited" before the audit ran).
 - S9 Robotics pack, seeded then deep. Real corpus intake; gated population by
   the validator; VT-1 closes BEFORE the first release; the CORA mapping
-  artifact; demo flows. Exit: robotics v1.0.0 tagged with its release
+  artifact; demo flows. Entry criterion (AR-rag4ds-026 r3 O18, r7 carve-out
+  7, flagged): the PI registers the robotics validator identity in
+  identities.yaml, and decides whether the validator role carries its pack
+  (O17/O22), before the first pack session - the shipped registry holds no
+  validator, so no pack candidate can be approved or retracted by anyone
+  until then. Exit: robotics v1.0.0 tagged with its release
   manifest; A1 and A4 green; the NFR3 scan - now with a real pack lexicon -
   clean over core and both shared layers; the validator's measured hours and
   decisions-per-hour recorded, replacing 6.4's figure and the robotics line
@@ -1137,6 +1222,11 @@ order of a few validator hours; grocery (seeded) - order of a few validator
 hours; shared layers (S8) - order of a few designee hours. The validator's
 hours are the module's critical path (4.7), and S9 exists partly to turn
 these assumptions into measured facts.
+MEASURED at S8 (2026-09-12, flagged): the shared layers took 0.53 designee hours -
+one session, 34 decisions (17 approvals; 17 rejections of a misfiled batch),
+64.7 decisions per hour on hand-authored, conflict-free candidates
+(runs/gate-sessions.jsonl; docs/s8_shared_layers.md) - inside the assumed 'a few',
+and not a proxy for validator sessions over extracted robotics candidates.
 
 Section 8's code-coverage question, answered here where it was deferred:
 pytest coverage is measured and reported at every step's exit and never
@@ -1238,6 +1328,10 @@ Open:
 - OD-1: who is the designated expert gating the general and task layers
   (section 3, gate ownership). Domain packs have named validators; these two
   shared layers need one.
+  DECIDED 2026-09-12 by the PI (audit/rag4ds/responses/PI_decision_OD-1_2026-09-12.md),
+  flagged post-certification: "OD-1: Siriweera (designee); alternate Paik; entries authored by the designee are gated by the alternate".
+  T. A. Siriweera gates the general and task layers; I. Paik is the alternate;
+  an entry authored by the designee is gated by the alternate. S8 opens.
 - OD-2: who validates the bioinformatics pack (section 5.3). Seeding and
   deepening both wait on this - every domain entry passes the domain gate
   (I2) - so acceptance case A2 depends on it; staging preparation may proceed.
@@ -1254,6 +1348,16 @@ Verification tasks (must close before the dependent work ships):
 
 - VT-1: verify the concrete CORA class list against the actual IEEE 1872 text
   before the robotics pack's first release (section 4.5; C7 note in section 1).
+  DISCHARGED 2026-09-20 at S9d, flagged: the list is verified against IEEE Std
+  1872-2015 itself (the PI's copy, sha256-pinned; nothing of its text in git)
+  and recorded as data in packs/robotics/standards.yaml, with IEEE Std
+  1872.2-2021 (AuR) registered as the extension reference; the verification
+  and the corrections it made to the team's earlier assumed list (part and
+  autonomy roles are relations, not classes) are docs/s9_robotics_pack.md
+  section 15; the relation list (declared by subrelation or by a
+  relation-typing axiom) was completed to all 42 after AR-rag4ds-042 r1 F1,
+  flagged. The first mapping draft (one row per gated entry of the pack)
+  is filed for the validator by the 4.5 gate path.
 - VT-2: verify the concrete public datasets for the bioinformatics and grocery
   corpora - existence, license terms, and absence of personal data (NFR6, NFR7) -
   before those corpora are registered (sections 5.3, 5.4).
@@ -1267,3 +1371,11 @@ Verification tasks (must close before the dependent work ships):
   1110a243fdf4706b3f48f1d95db1a4f5529b4d41), and the recorded
   environment incident (WinError 206 under the deep OneDrive path;
   venv relocated to a short path outside the tree).
+  RE-OPENED 2026-09-11 per the PI decision of 2026-08-23 (a spaCy language
+  model to be pinned) and DISCHARGED again the same day, flagged post-
+  certification (VT-3b in docs/vt3_pins.md): en_core_web_sm 3.8.0, MIT,
+  wheel sha256-pinned in pyproject and both locks and verified at load by
+  extract/language_model.py (fail-loud, no blank-pipeline fallback); NOT
+  used for S7's sentence splitting, by measurement - identical boundaries
+  on the S7 corpus, worse on a table sample - so S7's behaviour is
+  unchanged and the model serves the next extraction increment.

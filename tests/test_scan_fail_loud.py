@@ -23,7 +23,7 @@ def test_plan_scan_fails_on_non_ascii_and_naming(tmp_path):
     docs = tmp_path / "AutonBDA" / "module1_rag_for_ds" / "docs"
     docs.mkdir(parents=True)
     (docs / "plan_module1.md").write_text(
-        "# doctored plan—with an em dash\n\n"
+        "# doctored plan\u2014with an em dash\n\n"
         "## 4. x\n## 5. y\n\nModule 3 is referenced here without a declared map.\n",
         encoding="utf-8",
     )
@@ -75,8 +75,33 @@ def test_framework_scan_fails_on_non_ascii_flag(tmp_path):
     )
     for name in ("README.md", "BRIEFING.md", "SCOPES.md"):
         (audit / name).write_text("# stub\n", encoding="utf-8")
-    (audit / "flagged.md").write_text("smørrebrød\n", encoding="utf-8")
+    (audit / "flagged.md").write_text("sm\u00f8rrebr\u00f8d\n", encoding="utf-8")
     result = run(REPO_ROOT / "audit" / "tools" / "framework_scan.py", tmp_path)
     assert result.returncode == 1, result.stdout
     assert "FLAG" in result.stdout
+    assert "framework_scan: FAIL" in result.stdout
+
+
+def test_framework_scan_fails_on_control_bytes(tmp_path):
+    """AR-rag4ds-024 F6: a vertical tab inside an otherwise ASCII record is a
+    FLAG, exempt class or not."""
+    (tmp_path / "Z_Audit_Protocol.md").write_text("## 1. one\n", encoding="utf-8")
+    audit = tmp_path / "audit"
+    audit.mkdir()
+    (audit / "LEDGER.md").write_text(
+        "| AR ID | JST date | Type | Scope |\ncounts NUMBERED findings\n"
+        "| Finding | Severity | Adjudication | Credit | Source |\n"
+        "CRITICAL 5, MAJOR 3, MINOR 1\n"
+        "| Net daily reward | Cumulative | Citations |\n"
+        "Auditor confirmation (report)\n",
+        encoding="utf-8",
+    )
+    for name in ("README.md", "BRIEFING.md", "SCOPES.md"):
+        (audit / name).write_text("# stub\n", encoding="utf-8")
+    reports = audit / "reports"
+    reports.mkdir()
+    (reports / "verbatim.md").write_bytes(b"C:" + bytes([11]) + b"envs" + bytes([13]) + b"ag4ds\n")
+    result = run(REPO_ROOT / "audit" / "tools" / "framework_scan.py", tmp_path)
+    assert result.returncode == 1, result.stdout
+    assert "control-bytes: 2 FLAG" in result.stdout, result.stdout
     assert "framework_scan: FAIL" in result.stdout

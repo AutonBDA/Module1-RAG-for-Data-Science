@@ -1,0 +1,83 @@
+# The robotics pack manifest (plan 4.1; the coupling surface with the core,
+# 4.4). Human-edited YAML (section 8); read by src/rag4ds/model/pack.py and
+# validated against the running core. A pack is data, never code.
+schema: 1
+code: robotics
+name: Robotics - actuator-failure prediction from joint and actuator telemetry
+version: 1.0.1
+# lifecycle (4.3): DRAFT -> POPULATING (corpus catalogued, extraction and the
+# validator's gate at work) -> RELEASED (a semver release) -> RETIRED
+state: RELEASED
+validator:
+  role: validator
+  designee: K. Naruse
+license: >-
+  Pack content (entries, mappings, manifests, demo flows) Apache-2.0 with the
+  module; corpus documents under their own licences, recorded per document in
+  corpus/catalog.yaml (NFR6) - raw copies stay outside git in data/robotics/.
+ethics: >-
+  No personal data: the corpus is vendor maintenance documentation and
+  open-access literature on industrial-robot faults; no operator or customer
+  records. Entries restate technical facts under the quotation bound (NFR5)
+  and cite their document by hash and span (NFR7).
+description: >-
+  Plan 5.2: the deep, first pack. Use case: grounding an analysis that predicts
+  actuator failure from joint and actuator telemetry (multivariate time series
+  of joint torque and actuator readings). Demo flows bound at gating time
+  (FR9). Carries the CORA (IEEE 1872) mapping obligation (FR11, VT-1).
+# NFR3 lexicon: every domain term this pack OWNS - robot hardware, vendor
+# and controller vocabulary. tools/nfr3_scan.py scans core code (src/) and
+# the shared layers (shared/general, shared/tasks) for these as whole words
+# or phrases; a hit fails the build. Lowercase; phrases allowed. Curated at
+# S9a; grows with the entries. Generic reliability and control-engineering
+# terms (remaining useful life, fault-tolerant control, residual generator,
+# motor drive, gear tooth wear) are deliberately NOT here: the shared task
+# layer legitimately uses them (the failure-prediction task pattern says
+# "remaining useful life"), so they are not this pack's to own - the first
+# scan run found exactly that hit and the lexicon was corrected, not the
+# gated entry. RULED by the OD-1 designee (the PI) on 2026-09-14 11:50 JST
+# per plan NFR3 (audit/rag4ds/responses/PI_decision_NFR3-lexicon_2026-09-14.md;
+# AR-rag4ds-029 r1 F1): the five terms stay off; future collisions go to
+# the designee before any lexicon change. "encoder" and "encoders" (also
+# machine-learning vocabulary - AR-rag4ds-029 r1 O2) STAY, by the
+# designee's ruling of 2026-09-14 12:25 JST
+# (audit/rag4ds/responses/PI_decision_NFR3-encoder_2026-09-14.md); a
+# shared-layer entry needing the ML sense goes to the designee then.
+lexicon:
+  - actuator
+  - actuators
+  - joint torque
+  - torque sensor
+  - gearbox
+  - harmonic drive
+  - strain wave gear
+  - encoder
+  - encoders
+  - servo
+  - servo motor
+  - servomotor
+  - manipulator
+  - manipulators
+  - end effector
+  - end-effector
+  - robot arm
+  - robotic arm
+  - rotary joint
+  - joint module
+  - teach pendant
+  - control box
+  - cobot
+  - collaborative robot
+  - industrial robot
+  - polyscope
+  - backlash
+  - brake release
+  - motor current
+  - joint temperature
+  - joint communication
+  - safety controller
+  - protective stop
+  - rv reducer
+  - cycloidal reducer
+  - joint bearing
+min_core_schema_version: 1
